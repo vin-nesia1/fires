@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="h4xG5XuTjoTcM8fRui_yj0Dzy2go3ZTa3RfZBGwZmBg" />
+    
+    <!-- SEO Meta Tags (English) -->
+    <title>QR Code Generator - VIN NESIA</title>
+    <meta name="description" content="Create custom QR Codes with your logo for free. The VIN NESIA QR Code Generator supports Text, URL, WiFi, vCard, Location, and Files. Design your QR code with unique colors and styles.">
+    <meta name="keywords" content="qr code generator, create qr code, free qr code, vin nesia, online qr code, qr code with logo, wifi qr code, vcard qr code, qr generator tool">
+    <meta name="author" content="VIN NESIA">
+    <link rel="canonical" href="https://qr.vinnesia.my.id">
+    <link rel="icon" type="image/png" href="/favicon-v1.png" sizes="48x48">
+    <link rel="shortcut icon" href="/favicon-v1.ico" type="image/x-icon">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://qr.vinnesia.my.id">
+    <meta property="og:title" content="QR Code Generator - VIN NESIA">
+    <meta property="og:description" content="Easily create custom QR Codes with your logo for free. Supports Text, URL, WiFi, vCard, and more.">
+    <meta property="og:image" content="https://www.vinnesia.my.id/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://qr.vinnesia.my.id">
+    <meta property="twitter:title" content="QR Code Generator - VIN NESIA">
+    <meta property="twitter:description" content="Easily create custom QR Codes with your logo for free. Supports Text, URL, WiFi, vCard, and more.">
+    <meta property="twitter:image" content="https://www.vinnesia.my.id/og-image.png">
+    
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6MQ8QLENDT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-6MQ8QLENDT');
+</script>
+
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    
+    <style>
+        :root {
+            --color-background: #121212;
+            --color-surface: #1e1e1e;
+            --color-primary: #8A2BE2; /* Purple */
+            --color-secondary: #FFD700; /* Gold */
+            --color-text: #EAEAEA;
+            --color-text-muted: #A0A0A0;
+            --color-border: #333333;
+            --color-action: #00897B; /* Teal/Green for Generate button */
+            --color-success: #4CAF50;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            background-color: var(--color-background);
+            color: var(--color-text);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 2rem auto;
+            flex-grow: 1;
+        }
+
+        header {
+            text-align: center;
+            padding: 2rem 1rem;
+            border-bottom: 1px solid var(--color-border);
+            position: relative;
+        }
+
+        header h1 {
+            margin: 0;
+            color: var(--color-text);
+            font-size: 2.8em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .logo-img {
+            height: 50px;
+            filter: drop-shadow(0 0 5px var(--color-secondary));
+        }
+
+        header p {
+            color: var(--color-text-muted);
+            font-size: 1.1em;
+            margin-top: 0.5rem;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.9em;
+        }
+
+        .user-email {
+            color: var(--color-success);
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background-color: var(--color-primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: #9932CC;
+        }
+
+        main {
+            display: flex;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .controls {
+            flex: 2;
+            background: var(--color-surface);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .output {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--color-surface);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--color-border);
+            min-height: 350px;
+            position: sticky;
+            top: 2rem;
+            align-self: flex-start;
+        }
+
+        .tabs-grid-container {
+            display: flex;
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-button {
+            padding: 0.8rem 1rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1em;
+            color: var(--color-text-muted);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        .tab-button:hover { color: var(--color-text); }
+        .tab-button.active {
+            color: var(--color-secondary);
+            font-weight: bold;
+            border-bottom-color: var(--color-secondary);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: var(--color-text); }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1em;
+            background-color: #2c2c2c;
+            color: var(--color-text);
+        }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+        .form-group input[type="color"] { padding: 0.2rem; height: 40px; }
+
+        .file-warning {
+            background-color: rgba(255, 215, 0, 0.1);
+            color: var(--color-secondary);
+            padding: 0.8rem;
+            border: 1px solid var(--color-secondary);
+            border-radius: 6px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        #qr-code-container {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+            transition: background-color 0.3s ease;
+        }
+        #qr-code canvas, #qr-code svg { border-radius: 4px; display: block; width: 100%; height: auto; }
+
+        .download-buttons { display: flex; gap: 1rem; width: 100%; }
+        .btn {
+            flex-grow: 1;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border: none;
+        }
+        .btn-primary { background-color: var(--color-primary); color: white; }
+        .btn-primary:hover { background-color: #9932CC; }
+        .btn-secondary { background-color: var(--color-secondary); color: var(--color-background); }
+        .btn-secondary:hover { background-color: #FFC700; }
+        
+        .btn-generate {
+            background-color: var(--color-action);
+            color: white;
+            width: 100%;
+            padding: 1rem;
+            margin-top: auto; /* Pushes button to the bottom */
+            font-size: 1.2em;
+        }
+        .btn-generate:hover { background-color: #00695C; }
+        
+        .btn-outline { background-color: transparent; color: var(--color-secondary); border: 1px solid var(--color-secondary); }
+        .btn-outline:hover { background-color: var(--color-secondary); color: var(--color-background); }
+
+        /* Disabled state for buttons when not logged in */
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #555;
+            color: #999;
+        }
+
+        .disabled-overlay {
+            position: relative;
+        }
+
+        .disabled-overlay::after {
+            content: '🔒 Login Required';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: var(--color-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            border-radius: 12px;
+            z-index: 10;
+            cursor: pointer;
+        }
+
+        /* Login Modal Styles */
+        .login-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .login-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-modal-content {
+            background: var(--color-surface);
+            padding: 3rem 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-modal h2 {
+            color: var(--color-secondary);
+            margin-bottom: 1rem;
+            font-size: 2em;
+        }
+
+        .login-modal p {
+            color: var(--color-text-muted);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .login-modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .login-modal .btn {
+            flex: none;
+            min-width: 120px;
+        }
+
+        footer {
+            background-color: #0a0a0a;
+            color: var(--color-text-muted);
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+            margin-top: 2rem;
+            border-top: 1px solid var(--color-border);
+        }
+        .footer-content { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
+        .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem 2rem; list-style: none; padding: 0; margin: 0; }
+        .footer-links a { color: var(--color-text-muted); text-decoration: none; transition: color 0.3s ease; }
+        .footer-links a:hover { color: var(--color-secondary); }
+        .copyright { margin-top: 1rem; font-size: 0.9em; }
+
+        /* --- MEDIA QUERIES FOR RESPONSIVE DESIGN --- */
+        @media (max-width: 992px) {
+            main { flex-direction: column; }
+            .output { position: static; align-self: auto; }
+            
+            /* --- GRID TAB LAYOUT FOR TABLET & MOBILE --- */
+            .tabs-grid-container {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 0.5rem;
+                border-bottom: none;
+            }
+            .tab-button {
+                border: 1px solid var(--color-border);
+                border-radius: 6px;
+                padding: 0.75rem 0.5rem;
+                font-size: 0.85em;
+                text-align: center;
+                border-bottom: 1px solid var(--color-border); /* Reset border */
+            }
+            .tab-button.active {
+                border-color: var(--color-secondary);
+                background-color: #2a2a2a;
+            }
+
+            .user-info {
+                position: static;
+                justify-content: center;
+                margin-top: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container { width: 95%; margin: 1.5rem auto; }
+            header h1 { font-size: 2.2em; } .logo-img { height: 40px; }
+            .controls, .output { padding: 1.5rem; }
+            .footer-links { flex-direction: column; gap: 1rem; }
+            
+            .login-modal-content {
+                padding: 2rem 1.5rem;
+            }
+
+            .login-modal-buttons {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            header h1 { font-size: 2em; } .logo-img { height: 35px; }
+            .download-buttons { flex-direction: column; }
+            .btn { padding: 1rem; }
+            #qr-code-container { padding: 0.5rem; }
+            .tabs-grid-container { grid-template-columns: repeat(3, 1fr); } /* 3 columns for very small screens */
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>
+            <img src="logo.png" alt="VIN NESIA Logo" class="logo-img" onerror="this.style.display='none'">
+            VIN NESIA
+        </h1>
+        <p>QR Code Generator</p>
+        
+        <!-- User Info Section -->
+        <div id="user-info" class="user-info" style="display: none;">
+            <span id="user-email" class="user-email"></span>
+            <button id="logout-btn" class="logout-btn">Logout</button>
+        </div>
+    </header>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="login-modal">
+        <div class="login-modal-content">
+            <h2>🔐 Authentication Required</h2>
+            <p>Please log in to use the QR Code Generator. Your account allows you to access all features and save your preferences.</p>
+            <div class="login-modal-buttons">
+                <button id="modal-login-btn" class="btn btn-primary">Login</button>
+                <button id="modal-register-btn" class="btn btn-secondary">Register</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="controls" id="controls-section">
+            <div class="tabs-grid-container">
+                <button class="tab-button active" onclick="openTab(event, 'text')">📝 Text/URL</button>
+                <button class="tab-button" onclick="openTab(event, 'wifi')">📶 WiFi</button>
+                <button class="tab-button" onclick="openTab(event, 'vcard')">👤 vCard</button>
+                <button class="tab-button" onclick="openTab(event, 'email')">📧 Email</button>
+                <button class="tab-button" onclick="openTab(event, 'sms')">📱 SMS</button>
+                <button class="tab-button" onclick="openTab(event, 'geo')">📍 Location</button>
+                <button class="tab-button" onclick="openTab(event, 'file')">📁 File</button>
+                <button class="tab-button" onclick="openTab(event, 'event')">🗓️ Event</button>
+                <button class="tab-button" onclick="openTab(event, 'crypto')">💰 Crypto</button>
+                <button class="tab-button" onclick="openTab(event, 'phone')">☎️ Phone</button>
+                <button class="tab-button" onclick="openTab(event, 'whatsapp')">💬 WhatsApp</button>
+                <button class="tab-button" onclick="openTab(event, 'social')">🌐 Social</button>
+                <button class="tab-button" onclick="openTab(event, 'appstore')">📱 App Store</button>
+                <button class="tab-button" onclick="openTab(event, 'multilang')">🌍 Multi-Lang</button>
+                <button class="tab-button" onclick="openTab(event, 'htmlcustom')">📄 HTML</button>
+            </div>
+
+            <div id="text" class="tab-content active"><div class="form-group"><label for="text-input">Your Text or URL</label><textarea id="text-input" placeholder="e.g., https://www.vinnesia.my.id"></textarea></div></div>
+            <div id="wifi" class="tab-content"><div class="form-group"><label for="wifi-ssid">Network Name (SSID)</label><input type="text" id="wifi-ssid" placeholder="MyWiFiNetwork"></div><div class="form-group"><label for="wifi-password">Password</label><input type="text" id="wifi-password" placeholder="SecretPassword"></div><div class="form-group"><label for="wifi-encryption">Encryption</label><select id="wifi-encryption"><option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="nopass">None</option></select></div></div>
+            <div id="vcard" class="tab-content"><div class="form-group"><label for="vcard-name">Full Name</label><input type="text" id="vcard-name"></div><div class="form-group"><label for="vcard-phone">Phone</label><input type="tel" id="vcard-phone"></div><div class="form-group"><label for="vcard-email">Email</label><input type="email" id="vcard-email"></div><div class="form-group"><label for="vcard-org">Organization</label><input type="text" id="vcard-org"></div><div class="form-group"><label for="vcard-url">Website</label><input type="url" id="vcard-url"></div></div>
+            <div id="email" class="tab-content"><div class="form-group"><label for="email-to">Recipient Email</label><input type="email" id="email-to" placeholder="recipient@example.com"></div><div class="form-group"><label for="email-subject">Subject</label><input type="text" id="email-subject"></div><div class="form-group"><label for="email-body">Message</label><textarea id="email-body"></textarea></div></div>
+            <div id="sms" class="tab-content"><div class="form-group"><label for="sms-to">Phone Number</label><input type="tel" id="sms-to" placeholder="+1234567890"></div><div class="form-group"><label for="sms-body">Message</label><textarea id="sms-body"></textarea></div></div>
+            <div id="geo" class="tab-content"><div class="form-group"><label for="geo-lat">Latitude</label><input type="text" id="geo-lat" placeholder="40.7128"></div><div class="form-group"><label for="geo-lon">Longitude</label><input type="text" id="geo-lon" placeholder="-74.0060"></div></div>
+            <div id="file" class="tab-content"><div class="form-group"><label for="file-input">Upload File</label><input type="file" id="file-input"><div class="file-warning"><strong>Warning:</strong> For very small files (< 2KB) only. Large files will create unscannable QR codes. For larger files, upload them to a cloud service and create a QR code from the share link.</div></div></div>
+            <div id="event" class="tab-content">
+                <div class="form-group"><label for="event-summary">Event Title</label><input type="text" id="event-summary" placeholder="My Event"></div>
+                <div class="form-group"><label for="event-start">Start Date (YYYY-MM-DDTHH:MM)</label><input type="text" id="event-start" placeholder="2023-12-31T23:59"></div>
+                <div class="form-group"><label for="event-end">End Date (YYYY-MM-DDTHH:MM)</label><input type="text" id="event-end" placeholder="2024-01-01T00:01"></div>
+                <div class="form-group"><label for="event-location">Location</label><input type="text" id="event-location" placeholder="Jakarta, Indonesia"></div>
+                <div class="form-group"><label for="event-description">Description</label><textarea id="event-description" placeholder="Event details..."></textarea></div>
+            </div>
+            <div id="crypto" class="tab-content">
+                <div class="form-group"><label for="crypto-type">Crypto Type</label><select id="crypto-type"><option value="bitcoin">Bitcoin</option><option value="ethereum">Ethereum</option><option value="litecoin">Litecoin</option></select></div>
+                <div class="form-group"><label for="crypto-address">Wallet Address</label><input type="text" id="crypto-address" placeholder="1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"></div>
+                <div class="form-group"><label for="crypto-amount">Amount</label><input type="text" id="crypto-amount" placeholder="0.001"></div>
+                <div class="form-group"><label for="crypto-label">Label</label><input type="text" id="crypto-label" placeholder="Donation"></div>
+            </div>
+            <div id="phone" class="tab-content">
+                <div class="form-group"><label for="phone-number">Phone Number</label><input type="tel" id="phone-number" placeholder="+6281234567890"></div>
+            </div>
+            <div id="whatsapp" class="tab-content">
+                <div class="form-group"><label for="whatsapp-number">Phone Number</label><input type="tel" id="whatsapp-number" placeholder="+6281234567890"></div>
+                <div class="form-group"><label for="whatsapp-message">Pre-filled Message</label><textarea id="whatsapp-message" placeholder="Hello!"></textarea></div>
+            </div>
+            <div id="social" class="tab-content">
+                <div class="form-group"><label for="social-platform">Platform</label><select id="social-platform"><option value="instagram">Instagram</option><option value="telegram">Telegram</option><option value="tiktok">TikTok</option></select></div>
+                <div class="form-group"><label for="social-username">Username</label><input type="text" id="social-username" placeholder="username"></div>
+            </div>
+            <div id="appstore" class="tab-content">
+                <div class="form-group"><label for="appstore-platform">Platform</label><select id="appstore-platform"><option value="playstore">Google Play Store</option><option value="appstore">Apple App Store</option></select></div>
+                <div class="form-group"><label for="appstore-id">App ID or URL</label><input type="text" id="appstore-id" placeholder="com.example.app or full URL"></div>
+            </div>
+            <div id="multilang" class="tab-content">
+                <div class="form-group"><label for="multilang-baseurl">Base URL</label><input type="url" id="multilang-baseurl" placeholder="https://example.com"></div>
+                <div class="form-group"><label for="multilang-langparam">Language Parameter (e.g., lang=en)</label><input type="text" id="multilang-langparam" placeholder="lang=en"></div>
+            </div>
+            <div id="htmlcustom" class="tab-content">
+                <div class="form-group"><label for="htmlcustom-content">HTML Content</label><textarea id="htmlcustom-content" placeholder="<h1>Hello World</h1>"></textarea></div>
+            </div>
+
+            <h3 style="margin-top: 2rem; border-top: 1px solid var(--color-border); padding-top: 1.5rem; color: var(--color-secondary);">Design Options</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div class="form-group"><label for="dot-color">Dot Color</label><input type="color" id="dot-color" value="#000000"></div>
+                <div class="form-group"><label for="bg-color">Background Color</label><input type="color" id="bg-color" value="#ffffff"></div>
+                <div class="form-group"><label for="dot-style">Dot Style</label><select id="dot-style"><option value="square">Square</option><option value="dots">Dots</option><option value="rounded">Rounded</option><option value="extra-rounded">Extra Rounded</option><option value="classy">Classy</option><option value="classy-rounded">Classy Rounded</option></select></div>
+                <div class="form-group"><label for="logo-upload">Upload Logo</label><input type="file" id="logo-upload" accept="image/*"></div>
+            </div>
+
+            <button id="generate-btn" class="btn btn-generate">Generate QR Code</button>
+        </div>
+
+        <div class="output" id="output-section">
+            <div id="qr-code-container">
+                <div id="qr-code"></div>
+            </div>
+            <div class="download-buttons">
+                <button id="download-png" class="btn btn-primary">Download PNG</button>
+                <button id="download-svg" class="btn btn-secondary">Download SVG</button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <a href="https://www.vinnesia.my.id" class="btn btn-outline">Back to Homepage</a>
+            <ul class="footer-links">
+                <li><a href="mailto:support@vinnesia.my.id">📧 Email</a></li>
+                <li><a href="https://instagram.com/vin.nesia.id" target="_blank" rel="noopener noreferrer">🧑‍💻 Instagram</a></li>
+                <li><a href="https://wa.me/62895354511777" target="_blank" rel="noopener noreferrer">📱 WhatsApp</a></li>
+                <li><a href="https://www.vinnesia.my.id/privacy" target="_blank">Privacy Policy</a></li>
+            </ul>
+            <div class="copyright">
+                © 2025 VIN NESIA. All rights reserved. <br> 📍 Indonesia
+            </div>
+        </div>
+    </footer>
+
+    <!-- Firebase Configuration -->
+    <script type="module" src="firebase-config.js"></script>
+
+    <script>
+        let currentTab = 'text';
+        let logoImage = null;
+        let fileDataUrl = null;
+        let isUserLoggedIn = false;
+
+        const qrCode = new QRCodeStyling({
+            width: 300,
+            height: 300,
+            data: "Welcome to VIN NESIA QR Generator!",
+            image: "",
+            dotsOptions: { color: "#000000", type: "square" },
+            backgroundOptions: { color: "#ffffff" },
+            imageOptions: { crossOrigin: "anonymous", margin: 5, imageSize: 0.4 },
+            qrOptions: { errorCorrectionLevel: 'H' }
+        });
+
+        qrCode.append(document.getElementById("qr-code"));
+
+        // Authentication functions
+        function showLoginModal() {
+            document.getElementById('login-modal').classList.add('show');
+        }
+
+        function hideLoginModal() {
+            document.getElementById('login-modal').classList.remove('show');
+        }
+
+        function updateUIForAuthState(loggedIn) {
+            isUserLoggedIn = loggedIn;
+            
+            if (loggedIn) {
+                // User is logged in
+                const userEmail = localStorage.getItem('userEmail');
+                document.getElementById('user-email').textContent = userEmail || 'User';
+                document.getElementById('user-info').style.display = 'flex';
+                
+                // Remove disabled overlays and enable all functionality
+                removeLoginRequiredOverlays();
+                enableAllControls();
+                
+                hideLoginModal();
+            } else {
+                // User is not logged in - show everything but add login required overlays on action buttons
+                document.getElementById('user-info').style.display = 'none';
+                
+                // Keep inputs enabled for preview, but add overlays to action buttons
+                addLoginRequiredOverlays();
+                enablePreviewMode();
+            }
+        }
+
+        function enableAllControls() {
+            // Enable all buttons and inputs
+            document.querySelectorAll('button').forEach(btn => {
+                btn.disabled = false;
+            });
+            
+            document.querySelectorAll('input, textarea, select').forEach(input => {
+                input.disabled = false;
+            });
+        }
+
+        function enablePreviewMode() {
+            // Enable all inputs and selects so users can see and interact with forms
+            document.querySelectorAll('input, textarea, select').forEach(input => {
+                input.disabled = false;
+            });
+            
+            // Enable tab buttons for navigation
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.disabled = false;
+            });
+            
+            // Only disable action buttons (generate, download)
+            const actionButtons = ['generate-btn', 'download-png', 'download-svg'];
+            actionButtons.forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                if (btn) btn.disabled = true;
+            });
+        }
+
+        function addLoginRequiredOverlays() {
+            // Add overlay only to action buttons area, not the whole sections
+            const generateBtn = document.getElementById('generate-btn');
+            const downloadArea = document.querySelector('.download-buttons');
+            
+            if (generateBtn && !generateBtn.parentElement.querySelector('.login-overlay')) {
+                const overlay = createLoginOverlay('🔒 Login to Generate QR Code');
+                generateBtn.style.position = 'relative';
+                generateBtn.parentElement.style.position = 'relative';
+                generateBtn.parentElement.appendChild(overlay);
+            }
+            
+            if (downloadArea && !downloadArea.querySelector('.login-overlay')) {
+                const overlay = createLoginOverlay('🔒 Login to Download');
+                downloadArea.style.position = 'relative';
+                downloadArea.appendChild(overlay);
+            }
+        }
+
+        function removeLoginRequiredOverlays() {
+            document.querySelectorAll('.login-overlay').forEach(overlay => {
+                overlay.remove();
+            });
+        }
+
+        function createLoginOverlay(text) {
+            const overlay = document.createElement('div');
+            overlay.className = 'login-overlay';
+            overlay.textContent = text;
+            overlay.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(138,43,226,0.3) 50%, rgba(0,0,0,0.9) 100%);
+                color: #FFD700;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 1.1em;
+                border-radius: 8px;
+                z-index: 10;
+                cursor: pointer;
+                backdrop-filter: blur(2px);
+                transition: all 0.3s ease;
+            `;
+            
+            overlay.addEventListener('click', showLoginModal);
+            overlay.addEventListener('mouseover', () => {
+                overlay.style.background = 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(138,43,226,0.4) 50%, rgba(0,0,0,0.95) 100%)';
+                overlay.style.fontSize = '1.2em';
+            });
+            overlay.addEventListener('mouseout', () => {
+                overlay.style.background = 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(138,43,226,0.3) 50%, rgba(0,0,0,0.9) 100%)';
+                overlay.style.fontSize = '1.1em';
+            });
+            
+            return overlay;
+        }
+
+        // Check if user needs to login before performing actions
+        function requireAuth(callback) {
+            if (!isUserLoggedIn) {
+                showLoginModal();
+                return false;
+            }
+            callback();
+            return true;
+        }
+
+        function openTab(evt, tabName) {
+            // Allow tab switching even without login for preview
+            currentTab = tabName;
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(tb => tb.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+            
+            // Generate preview QR if not logged in
+            if (!isUserLoggedIn) {
+                generatePreviewQR();
+            }
+        }
+
+        function generateQrCode() {
+            if (!requireAuth(() => {
+                generateQR();
+            })) return;
+        }
+
+        function generatePreviewQR() {
+            // Generate a preview QR with sample data for demonstration
+            let previewData = "";
+            switch (currentTab) {
+                case 'text': previewData = "https://qr.vinnesia.my.id - Login to customize!"; break;
+                case 'wifi': previewData = "WIFI:T:WPA;S:SampleNetwork;P:SamplePassword;;"; break;
+                case 'vcard': previewData = "BEGIN:VCARD\nVERSION:3.0\nFN:Sample Name\nTEL:+123456789\nEMAIL:sample@example.com\nORG:VIN NESIA\nEND:VCARD"; break;
+                case 'email': previewData = "mailto:sample@example.com?subject=Sample Subject&body=Sample message"; break;
+                case 'sms': previewData = "SMSTO:+123456789:Sample SMS message"; break;
+                case 'geo': previewData = "geo:-6.2088,106.8456"; break;
+                case 'phone': previewData = "tel:+6281234567890"; break;
+                case 'whatsapp': previewData = "https://wa.me/6281234567890?text=Hello!"; break;
+                case 'crypto': previewData = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.001"; break;
+                default: previewData = `${currentTab.toUpperCase()} - Login to create custom QR codes!`;
+            }
+
+            // Update QR code with preview data and add watermark effect
+            qrCode.update({
+                data: previewData,
+                image: null, // No logo in preview
+                dotsOptions: { 
+                    color: "#666666", // Dimmed color for preview
+                    type: "square" 
+                },
+                backgroundOptions: { color: "transparent" }
+            });
+
+            // Add preview watermark
+            setTimeout(() => {
+                addPreviewWatermark();
+            }, 100);
+        }
+
+        function generateQR() {
+            // This is the actual QR generation for logged-in users
+            let data = "";
+            switch (currentTab) {
+                case 'text': data = document.getElementById('text-input').value || "https://qr.vinnesia.my.id"; break;
+                case 'wifi':
+                    const ssid = document.getElementById('wifi-ssid').value;
+                    const password = document.getElementById('wifi-password').value;
+                    const encryption = document.getElementById('wifi-encryption').value;
+                    if (ssid) data = `WIFI:T:${encryption};S:${ssid};P:${password};;`;
+                    break;
+                case 'vcard':
+                    const name = document.getElementById('vcard-name').value;
+                    const phone = document.getElementById('vcard-phone').value;
+                    const email = document.getElementById('vcard-email').value;
+                    const org = document.getElementById('vcard-org').value;
+                    const url = document.getElementById('vcard-url').value;
+                    if (name) data = `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nTEL:${phone}\nEMAIL:${email}\nORG:${org}\nURL:${url}\nEND:VCARD`;
+                    break;
+                case 'email':
+                    const to = document.getElementById('email-to').value;
+                    const subject = document.getElementById('email-subject').value;
+                    const body = document.getElementById('email-body').value;
+                    if (to) data = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                    break;
+                case 'sms':
+                    const smsTo = document.getElementById('sms-to').value;
+                    const smsBody = document.getElementById('sms-body').value;
+                    if (smsTo) data = `SMSTO:${smsTo}:${encodeURIComponent(smsBody)}`;
+                    break;
+                case 'geo':
+                    const lat = document.getElementById('geo-lat').value;
+                    const lon = document.getElementById('geo-lon').value;
+                    if (lat && lon) data = `geo:${lat},${lon}`;
+                    break;
+                case 'file': data = fileDataUrl || " "; break;
+                case 'event':
+                    const summary = document.getElementById('event-summary').value;
+                    const start = document.getElementById('event-start').value.replace(/[-:]/g, '');
+                    const end = document.getElementById('event-end').value.replace(/[-:]/g, '');
+                    const location = document.getElementById('event-location').value;
+                    const description = document.getElementById('event-description').value;
+                    if (summary && start && end) {
+                        data = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:${summary}\nDTSTART:${start}\nDTEND:${end}\nLOCATION:${location}\nDESCRIPTION:${description}\nEND:VEVENT\nEND:VCALENDAR`;
+                    }
+                    break;
+                case 'crypto':
+                    const cryptoType = document.getElementById('crypto-type').value;
+                    const address = document.getElementById('crypto-address').value;
+                    const amount = document.getElementById('crypto-amount').value;
+                    const label = document.getElementById('crypto-label').value;
+                    if (address) data = `${cryptoType}:${address}${amount ? `?amount=${amount}` : ''}${label ? `&label=${encodeURIComponent(label)}` : ''}`;
+                    break;
+                case 'phone':
+                    const phoneNumber = document.getElementById('phone-number').value;
+                    if (phoneNumber) data = `tel:${phoneNumber}`;
+                    break;
+                case 'whatsapp':
+                    const whatsappNumber = document.getElementById('whatsapp-number').value;
+                    const whatsappMessage = document.getElementById('whatsapp-message').value;
+                    if (whatsappNumber) data = `https://wa.me/${whatsappNumber.replace('+', '')}${whatsappMessage ? `?text=${encodeURIComponent(whatsappMessage)}` : ''}`;
+                    break;
+                case 'social':
+                    const platform = document.getElementById('social-platform').value;
+                    const username = document.getElementById('social-username').value;
+                    if (username) {
+                        if (platform === 'instagram') data = `https://instagram.com/${username}`;
+                        else if (platform === 'telegram') data = `https://t.me/${username}`;
+                        else if (platform === 'tiktok') data = `https://tiktok.com/@${username}`;
+                    }
+                    break;
+                case 'appstore':
+                    const appPlatform = document.getElementById('appstore-platform').value;
+                    const appId = document.getElementById('appstore-id').value;
+                    if (appId) {
+                        if (appPlatform === 'playstore') data = appId.startsWith('http') ? appId : `https://play.google.com/store/apps/details?id=${appId}`;
+                        else if (appPlatform === 'appstore') data = appId.startsWith('http') ? appId : `https://apps.apple.com/app/id${appId}`;
+                    }
+                    break;
+                case 'multilang':
+                    const baseUrl = document.getElementById('multilang-baseurl').value;
+                    const langParam = document.getElementById('multilang-langparam').value;
+                    if (baseUrl && langParam) data = `${baseUrl}?${langParam}`;
+                    break;
+                case 'htmlcustom':
+                    const htmlContent = document.getElementById('htmlcustom-content').value;
+                    if (htmlContent) data = `data:text/html;base64,${btoa(htmlContent)}`;
+                    break;
+            }
+
+            const dotColor = document.getElementById('dot-color').value;
+            const bgColor = document.getElementById('bg-color').value;
+            const dotStyle = document.getElementById('dot-style').value;
+            const qrContainer = document.getElementById('qr-code-container');
+            qrContainer.style.backgroundColor = bgColor;
+
+            qrCode.update({
+                data: data || " ",
+                image: logoImage,
+                dotsOptions: { color: dotColor, type: dotStyle },
+                backgroundOptions: { color: "transparent" }
+            });
+
+            // Remove preview watermark if exists
+            removePreviewWatermark();
+        }
+
+        function addPreviewWatermark() {
+            removePreviewWatermark(); // Remove existing watermark first
+            
+            const qrContainer = document.getElementById('qr-code-container');
+            const watermark = document.createElement('div');
+            watermark.id = 'preview-watermark';
+            watermark.textContent = 'PREVIEW MODE';
+            watermark.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-45deg);
+                background: rgba(255, 215, 0, 0.1);
+                color: rgba(255, 215, 0, 0.6);
+                padding: 5px 10px;
+                font-size: 12px;
+                font-weight: bold;
+                border: 1px solid rgba(255, 215, 0, 0.3);
+                border-radius: 4px;
+                pointer-events: none;
+                z-index: 5;
+            `;
+            
+            qrContainer.style.position = 'relative';
+            qrContainer.appendChild(watermark);
+        }
+
+        function removePreviewWatermark() {
+            const watermark = document.getElementById('preview-watermark');
+            if (watermark) {
+                watermark.remove();
+            }
+        }
+
+        // Initialize Firebase auth listeners
+        window.addEventListener('load', () => {
+            // Check initial login state
+            const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+            updateUIForAuthState(isLoggedIn);
+
+            // Set up Firebase auth state listener
+            setTimeout(() => {
+                if (window.firebaseAuth) {
+                    // Listen for auth state changes
+                    window.addEventListener('authStateChanged', (event) => {
+                        updateUIForAuthState(event.detail.loggedIn);
+                    });
+                }
+            }, 1000);
+        });
+
+        // Event listeners
+        document.getElementById('generate-btn').addEventListener('click', generateQrCode);
+
+        // Modal buttons
+        document.getElementById('modal-login-btn').addEventListener('click', () => {
+            window.location.href = `login.html?returnUrl=${encodeURIComponent(window.location.href)}`;
+        });
+
+        document.getElementById('modal-register-btn').addEventListener('click', () => {
+            window.location.href = `login.html?returnUrl=${encodeURIComponent(window.location.href)}`;
+        });
+
+        // Logout button
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            if (window.firebaseAuth && window.firebaseAuth.auth) {
+                try {
+                    await window.firebaseAuth.signOut(window.firebaseAuth.auth);
+                    // The auth state listener will handle UI updates
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    // Fallback: clear localStorage manually
+                    localStorage.removeItem('userLoggedIn');
+                    localStorage.removeItem('userEmail');
+                    localStorage.removeItem('userId');
+                    updateUIForAuthState(false);
+                }
+            }
+        });
+
+        // File upload listeners (these work regardless of auth state for preparation)
+        document.getElementById('logo-upload').addEventListener('change', (e) => {
+            if (isUserLoggedIn) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => { logoImage = event.target.result; };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+        
+        document.getElementById('file-input').addEventListener('change', (e) => {
+            if (isUserLoggedIn) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => { fileDataUrl = event.target.result; };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+
+        // Download buttons
+        document.getElementById('download-png').addEventListener('click', () => {
+            requireAuth(() => qrCode.download({ name: "vinnesia-qr", extension: "png" }));
+        });
+        
+        document.getElementById('download-svg').addEventListener('click', () => {
+            requireAuth(() => qrCode.download({ name: "vinnesia-qr", extension: "svg" }));
+        });
+
+        // Click handlers for login required overlays
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('login-overlay')) {
+                showLoginModal();
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('login-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('login-modal')) {
+                hideLoginModal();
+            }
+        });
+
+        // Initial setup
+        document.querySelector('.tab-button').click();
+        
+        // Always generate initial QR code (preview mode if not logged in)
+        setTimeout(() => {
+            if (isUserLoggedIn) {
+                generateQR();
+            } else {
+                generatePreviewQR();
+            }
+        }, 100);
+
+        // Add input listeners for real-time preview updates (only when not logged in)
+        function setupPreviewListeners() {
+            const inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    if (!isUserLoggedIn) {
+                        // Debounce the preview updates
+                        clearTimeout(window.previewTimeout);
+                        window.previewTimeout = setTimeout(() => {
+                            generatePreviewQR();
+                        }, 500);
+                    }
+                });
+            });
+        }
+
+        // Setup preview listeners after DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            setupPreviewListeners();
+        });
+</script>
+
+</body>
+</html>
