@@ -1,0 +1,357 @@
+/* Authentication Styles */
+/* This CSS file contains styles specific to authentication features */
+
+:root {
+    --auth-overlay-bg: rgba(0, 0, 0, 0.8);
+    --auth-modal-bg: #1e1e1e;
+    --auth-border: #333333;
+    --auth-primary: #8A2BE2;
+    --auth-secondary: #FFD700;
+    --auth-success: #4CAF50;
+    --auth-danger: #f44336;
+    --auth-text: #EAEAEA;
+    --auth-text-muted: #A0A0A0;
+}
+
+/* User Info in Header */
+.user-info {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.9em;
+    z-index: 100;
+}
+
+.user-email {
+    color: var(--auth-success);
+    font-weight: 600;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.logout-btn {
+    background-color: var(--auth-primary);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+    white-space: nowrap;
+}
+
+.logout-btn:hover {
+    background-color: #9932CC;
+}
+
+.logout-btn:active {
+    transform: translateY(1px);
+}
+
+/* Login Modal */
+.login-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--auth-overlay-bg);
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease;
+}
+
+.login-modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.login-modal-content {
+    background: var(--auth-modal-bg);
+    padding: 3rem 2rem;
+    border-radius: 12px;
+    border: 1px solid var(--auth-border);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+    width: 90%;
+    max-width: 450px;
+    text-align: center;
+    position: relative;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.login-modal h2 {
+    color: var(--auth-secondary);
+    margin-bottom: 1rem;
+    font-size: 2em;
+    font-weight: 700;
+}
+
+.login-modal p {
+    color: var(--auth-text-muted);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+    font-size: 1.1em;
+}
+
+.login-modal-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.login-modal .btn {
+    flex: none;
+    min-width: 120px;
+    padding: 1rem 1.5rem;
+    font-size: 1.1em;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.login-modal .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Disabled Overlay */
+.disabled-overlay {
+    position: relative;
+    pointer-events: none;
+}
+
+.disabled-overlay::after {
+    content: '🔒 Login Required';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(0, 0, 0, 0.85) 0%,
+        rgba(138, 43, 226, 0.1) 50%,
+        rgba(0, 0, 0, 0.85) 100%
+    );
+    color: var(--auth-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.3em;
+    border-radius: 12px;
+    z-index: 10;
+    cursor: pointer;
+    pointer-events: all;
+    backdrop-filter: blur(3px);
+    transition: all 0.3s ease;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.disabled-overlay::after:hover {
+    background: linear-gradient(
+        135deg,
+        rgba(0, 0, 0, 0.9) 0%,
+        rgba(138, 43, 226, 0.2) 50%,
+        rgba(0, 0, 0, 0.9) 100%
+    );
+    color: #FFC700;
+    font-size: 1.4em;
+}
+
+/* Loading State */
+.auth-loading {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1001;
+    background: var(--auth-modal-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid var(--auth-border);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+    text-align: center;
+}
+
+.auth-loading.show {
+    display: block;
+}
+
+.auth-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--auth-border);
+    border-top: 4px solid var(--auth-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Auth Messages */
+.auth-message {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    text-align: center;
+    animation: slideIn 0.3s ease;
+}
+
+.auth-message.success {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: var(--auth-success);
+    border: 1px solid var(--auth-success);
+}
+
+.auth-message.error {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: var(--auth-danger);
+    border: 1px solid var(--auth-danger);
+}
+
+.auth-message.info {
+    background-color: rgba(138, 43, 226, 0.1);
+    color: var(--auth-primary);
+    border: 1px solid var(--auth-primary);
+}
+
+/* Responsive Design for Auth Elements */
+@media (max-width: 992px) {
+    .user-info {
+        position: static;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    .user-email {
+        max-width: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .login-modal-content {
+        padding: 2rem 1.5rem;
+        max-width: 400px;
+    }
+
+    .login-modal h2 {
+        font-size: 1.8em;
+    }
+
+    .login-modal p {
+        font-size: 1em;
+    }
+
+    .login-modal-buttons {
+        flex-direction: column;
+    }
+
+    .login-modal .btn {
+        min-width: none;
+        width: 100%;
+    }
+
+    .disabled-overlay::after {
+        font-size: 1.1em;
+    }
+}
+
+@media (max-width: 576px) {
+    .user-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        font-size: 0.8em;
+    }
+
+    .logout-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8em;
+    }
+
+    .login-modal-content {
+        padding: 1.5rem 1rem;
+        margin: 1rem;
+    }
+
+    .login-modal h2 {
+        font-size: 1.5em;
+    }
+
+    .disabled-overlay::after {
+        font-size: 1em;
+        padding: 1rem;
+        text-align: center;
+    }
+}
+
+/* Animation for auth state changes */
+.auth-transition {
+    transition: all 0.3s ease;
+}
+
+/* Focus states for accessibility */
+.logout-btn:focus,
+.login-modal .btn:focus {
+    outline: 2px solid var(--auth-secondary);
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .disabled-overlay::after {
+        background: rgba(0, 0, 0, 0.95);
+        border: 2px solid var(--auth-secondary);
+    }
+
+    .login-modal-content {
+        border: 2px solid var(--auth-border);
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .login-modal,
+    .login-modal-content,
+    .auth-message,
+    .disabled-overlay::after {
+        animation: none;
+    }
+
+    .login-modal .btn:hover {
+        transform: none;
+    }
+
+    .auth-loading-spinner {
+        animation: none;
+    }
+}
