@@ -579,51 +579,111 @@
                 document.getElementById('user-email').textContent = userEmail || 'User';
                 document.getElementById('user-info').style.display = 'flex';
                 
-                // Remove disabled overlays
-                document.getElementById('controls-section').classList.remove('disabled-overlay');
-                document.getElementById('output-section').classList.remove('disabled-overlay');
-                
-                // Enable all buttons and inputs
+                // Remove disabled overlays and enable all functionality
+                removeLoginRequiredOverlays();
                 enableAllControls();
                 
                 hideLoginModal();
             } else {
-                // User is not logged in
+                // User is not logged in - show everything but add login required overlays on action buttons
                 document.getElementById('user-info').style.display = 'none';
                 
-                // Add disabled overlays
-                document.getElementById('controls-section').classList.add('disabled-overlay');
-                document.getElementById('output-section').classList.add('disabled-overlay');
-                
-                // Disable all buttons and inputs
-                disableAllControls();
+                // Keep inputs enabled for preview, but add overlays to action buttons
+                addLoginRequiredOverlays();
+                enablePreviewMode();
             }
         }
 
         function enableAllControls() {
-            // Enable all buttons
+            // Enable all buttons and inputs
             document.querySelectorAll('button').forEach(btn => {
                 btn.disabled = false;
             });
             
-            // Enable all inputs
             document.querySelectorAll('input, textarea, select').forEach(input => {
                 input.disabled = false;
             });
         }
 
-        function disableAllControls() {
-            // Disable all buttons except modal buttons
-            document.querySelectorAll('button').forEach(btn => {
-                if (!btn.id.includes('modal')) {
-                    btn.disabled = true;
-                }
+        function enablePreviewMode() {
+            // Enable all inputs and selects so users can see and interact with forms
+            document.querySelectorAll('input, textarea, select').forEach(input => {
+                input.disabled = false;
             });
             
-            // Disable all inputs
-            document.querySelectorAll('input, textarea, select').forEach(input => {
-                input.disabled = true;
+            // Enable tab buttons for navigation
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.disabled = false;
             });
+            
+            // Only disable action buttons (generate, download)
+            const actionButtons = ['generate-btn', 'download-png', 'download-svg'];
+            actionButtons.forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                if (btn) btn.disabled = true;
+            });
+        }
+
+        function addLoginRequiredOverlays() {
+            // Add overlay only to action buttons area, not the whole sections
+            const generateBtn = document.getElementById('generate-btn');
+            const downloadArea = document.querySelector('.download-buttons');
+            
+            if (generateBtn && !generateBtn.parentElement.querySelector('.login-overlay')) {
+                const overlay = createLoginOverlay('🔒 Login to Generate QR Code');
+                generateBtn.style.position = 'relative';
+                generateBtn.parentElement.style.position = 'relative';
+                generateBtn.parentElement.appendChild(overlay);
+            }
+            
+            if (downloadArea && !downloadArea.querySelector('.login-overlay')) {
+                const overlay = createLoginOverlay('🔒 Login to Download');
+                downloadArea.style.position = 'relative';
+                downloadArea.appendChild(overlay);
+            }
+        }
+
+        function removeLoginRequiredOverlays() {
+            document.querySelectorAll('.login-overlay').forEach(overlay => {
+                overlay.remove();
+            });
+        }
+
+        function createLoginOverlay(text) {
+            const overlay = document.createElement('div');
+            overlay.className = 'login-overlay';
+            overlay.textContent = text;
+            overlay.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(138,43,226,0.3) 50%, rgba(0,0,0,0.9) 100%);
+                color: #FFD700;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 1.1em;
+                border-radius: 8px;
+                z-index: 10;
+                cursor: pointer;
+                backdrop-filter: blur(2px);
+                transition: all 0.3s ease;
+            `;
+            
+            overlay.addEventListener('click', showLoginModal);
+            overlay.addEventListener('mouseover', () => {
+                overlay.style.background = 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(138,43,226,0.4) 50%, rgba(0,0,0,0.95) 100%)';
+                overlay.style.fontSize = '1.2em';
+            });
+            overlay.addEventListener('mouseout', () => {
+                overlay.style.background = 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(138,43,226,0.3) 50%, rgba(0,0,0,0.9) 100%)';
+                overlay.style.fontSize = '1.1em';
+            });
+            
+            return overlay;
         }
 
         // Check if user needs to login before performing actions
@@ -637,118 +697,197 @@
         }
 
         function openTab(evt, tabName) {
-            if (!requireAuth(() => {
-                currentTab = tabName;
-                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-                document.querySelectorAll('.tab-button').forEach(tb => tb.classList.remove('active'));
-                document.getElementById(tabName).classList.add('active');
-                evt.currentTarget.classList.add('active');
-            })) return;
+            // Allow tab switching even without login for preview
+            currentTab = tabName;
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(tb => tb.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+            
+            // Generate preview QR if not logged in
+            if (!isUserLoggedIn) {
+                generatePreviewQR();
+            }
         }
 
         function generateQrCode() {
             if (!requireAuth(() => {
-                let data = "";
-                switch (currentTab) {
-                    case 'text': data = document.getElementById('text-input').value || "https://qr.vinnesia.my.id"; break;
-                    case 'wifi':
-                        const ssid = document.getElementById('wifi-ssid').value;
-                        const password = document.getElementById('wifi-password').value;
-                        const encryption = document.getElementById('wifi-encryption').value;
-                        if (ssid) data = `WIFI:T:${encryption};S:${ssid};P:${password};;`;
-                        break;
-                    case 'vcard':
-                        const name = document.getElementById('vcard-name').value;
-                        const phone = document.getElementById('vcard-phone').value;
-                        const email = document.getElementById('vcard-email').value;
-                        const org = document.getElementById('vcard-org').value;
-                        const url = document.getElementById('vcard-url').value;
-                        if (name) data = `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nTEL:${phone}\nEMAIL:${email}\nORG:${org}\nURL:${url}\nEND:VCARD`;
-                        break;
-                    case 'email':
-                        const to = document.getElementById('email-to').value;
-                        const subject = document.getElementById('email-subject').value;
-                        const body = document.getElementById('email-body').value;
-                        if (to) data = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                        break;
-                    case 'sms':
-                        const smsTo = document.getElementById('sms-to').value;
-                        const smsBody = document.getElementById('sms-body').value;
-                        if (smsTo) data = `SMSTO:${smsTo}:${encodeURIComponent(smsBody)}`;
-                        break;
-                    case 'geo':
-                        const lat = document.getElementById('geo-lat').value;
-                        const lon = document.getElementById('geo-lon').value;
-                        if (lat && lon) data = `geo:${lat},${lon}`;
-                        break;
-                    case 'file': data = fileDataUrl || " "; break;
-                    case 'event':
-                        const summary = document.getElementById('event-summary').value;
-                        const start = document.getElementById('event-start').value.replace(/[-:]/g, '');
-                        const end = document.getElementById('event-end').value.replace(/[-:]/g, '');
-                        const location = document.getElementById('event-location').value;
-                        const description = document.getElementById('event-description').value;
-                        if (summary && start && end) {
-                            data = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:${summary}\nDTSTART:${start}\nDTEND:${end}\nLOCATION:${location}\nDESCRIPTION:${description}\nEND:VEVENT\nEND:VCALENDAR`;
-                        }
-                        break;
-                    case 'crypto':
-                        const cryptoType = document.getElementById('crypto-type').value;
-                        const address = document.getElementById('crypto-address').value;
-                        const amount = document.getElementById('crypto-amount').value;
-                        const label = document.getElementById('crypto-label').value;
-                        if (address) data = `${cryptoType}:${address}${amount ? `?amount=${amount}` : ''}${label ? `&label=${encodeURIComponent(label)}` : ''}`;
-                        break;
-                    case 'phone':
-                        const phoneNumber = document.getElementById('phone-number').value;
-                        if (phoneNumber) data = `tel:${phoneNumber}`;
-                        break;
-                    case 'whatsapp':
-                        const whatsappNumber = document.getElementById('whatsapp-number').value;
-                        const whatsappMessage = document.getElementById('whatsapp-message').value;
-                        if (whatsappNumber) data = `https://wa.me/${whatsappNumber.replace('+', '')}${whatsappMessage ? `?text=${encodeURIComponent(whatsappMessage)}` : ''}`;
-                        break;
-                    case 'social':
-                        const platform = document.getElementById('social-platform').value;
-                        const username = document.getElementById('social-username').value;
-                        if (username) {
-                            if (platform === 'instagram') data = `https://instagram.com/${username}`;
-                            else if (platform === 'telegram') data = `https://t.me/${username}`;
-                            else if (platform === 'tiktok') data = `https://tiktok.com/@${username}`;
-                        }
-                        break;
-                    case 'appstore':
-                        const appPlatform = document.getElementById('appstore-platform').value;
-                        const appId = document.getElementById('appstore-id').value;
-                        if (appId) {
-                            if (appPlatform === 'playstore') data = appId.startsWith('http') ? appId : `https://play.google.com/store/apps/details?id=${appId}`;
-                            else if (appPlatform === 'appstore') data = appId.startsWith('http') ? appId : `https://apps.apple.com/app/id${appId}`;
-                        }
-                        break;
-                    case 'multilang':
-                        const baseUrl = document.getElementById('multilang-baseurl').value;
-                        const langParam = document.getElementById('multilang-langparam').value;
-                        if (baseUrl && langParam) data = `${baseUrl}?${langParam}`;
-                        break;
-                    case 'htmlcustom':
-                        const htmlContent = document.getElementById('htmlcustom-content').value;
-                        if (htmlContent) data = `data:text/html;base64,${btoa(htmlContent)}`;
-                        break;
-                }
-
-                const dotColor = document.getElementById('dot-color').value;
-                const bgColor = document.getElementById('bg-color').value;
-                const dotStyle = document.getElementById('dot-style').value;
-                const qrContainer = document.getElementById('qr-code-container');
-                qrContainer.style.backgroundColor = bgColor;
-
-                qrCode.update({
-                    data: data || " ",
-                    image: logoImage,
-                    dotsOptions: { color: dotColor, type: dotStyle },
-                    backgroundOptions: { color: "transparent" }
-                });
+                generateQR();
             })) return;
+        }
+
+        function generatePreviewQR() {
+            // Generate a preview QR with sample data for demonstration
+            let previewData = "";
+            switch (currentTab) {
+                case 'text': previewData = "https://qr.vinnesia.my.id - Login to customize!"; break;
+                case 'wifi': previewData = "WIFI:T:WPA;S:SampleNetwork;P:SamplePassword;;"; break;
+                case 'vcard': previewData = "BEGIN:VCARD\nVERSION:3.0\nFN:Sample Name\nTEL:+123456789\nEMAIL:sample@example.com\nORG:VIN NESIA\nEND:VCARD"; break;
+                case 'email': previewData = "mailto:sample@example.com?subject=Sample Subject&body=Sample message"; break;
+                case 'sms': previewData = "SMSTO:+123456789:Sample SMS message"; break;
+                case 'geo': previewData = "geo:-6.2088,106.8456"; break;
+                case 'phone': previewData = "tel:+6281234567890"; break;
+                case 'whatsapp': previewData = "https://wa.me/6281234567890?text=Hello!"; break;
+                case 'crypto': previewData = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.001"; break;
+                default: previewData = `${currentTab.toUpperCase()} - Login to create custom QR codes!`;
+            }
+
+            // Update QR code with preview data and add watermark effect
+            qrCode.update({
+                data: previewData,
+                image: null, // No logo in preview
+                dotsOptions: { 
+                    color: "#666666", // Dimmed color for preview
+                    type: "square" 
+                },
+                backgroundOptions: { color: "transparent" }
+            });
+
+            // Add preview watermark
+            setTimeout(() => {
+                addPreviewWatermark();
+            }, 100);
+        }
+
+        function generateQR() {
+            // This is the actual QR generation for logged-in users
+            let data = "";
+            switch (currentTab) {
+                case 'text': data = document.getElementById('text-input').value || "https://qr.vinnesia.my.id"; break;
+                case 'wifi':
+                    const ssid = document.getElementById('wifi-ssid').value;
+                    const password = document.getElementById('wifi-password').value;
+                    const encryption = document.getElementById('wifi-encryption').value;
+                    if (ssid) data = `WIFI:T:${encryption};S:${ssid};P:${password};;`;
+                    break;
+                case 'vcard':
+                    const name = document.getElementById('vcard-name').value;
+                    const phone = document.getElementById('vcard-phone').value;
+                    const email = document.getElementById('vcard-email').value;
+                    const org = document.getElementById('vcard-org').value;
+                    const url = document.getElementById('vcard-url').value;
+                    if (name) data = `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nTEL:${phone}\nEMAIL:${email}\nORG:${org}\nURL:${url}\nEND:VCARD`;
+                    break;
+                case 'email':
+                    const to = document.getElementById('email-to').value;
+                    const subject = document.getElementById('email-subject').value;
+                    const body = document.getElementById('email-body').value;
+                    if (to) data = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                    break;
+                case 'sms':
+                    const smsTo = document.getElementById('sms-to').value;
+                    const smsBody = document.getElementById('sms-body').value;
+                    if (smsTo) data = `SMSTO:${smsTo}:${encodeURIComponent(smsBody)}`;
+                    break;
+                case 'geo':
+                    const lat = document.getElementById('geo-lat').value;
+                    const lon = document.getElementById('geo-lon').value;
+                    if (lat && lon) data = `geo:${lat},${lon}`;
+                    break;
+                case 'file': data = fileDataUrl || " "; break;
+                case 'event':
+                    const summary = document.getElementById('event-summary').value;
+                    const start = document.getElementById('event-start').value.replace(/[-:]/g, '');
+                    const end = document.getElementById('event-end').value.replace(/[-:]/g, '');
+                    const location = document.getElementById('event-location').value;
+                    const description = document.getElementById('event-description').value;
+                    if (summary && start && end) {
+                        data = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:${summary}\nDTSTART:${start}\nDTEND:${end}\nLOCATION:${location}\nDESCRIPTION:${description}\nEND:VEVENT\nEND:VCALENDAR`;
+                    }
+                    break;
+                case 'crypto':
+                    const cryptoType = document.getElementById('crypto-type').value;
+                    const address = document.getElementById('crypto-address').value;
+                    const amount = document.getElementById('crypto-amount').value;
+                    const label = document.getElementById('crypto-label').value;
+                    if (address) data = `${cryptoType}:${address}${amount ? `?amount=${amount}` : ''}${label ? `&label=${encodeURIComponent(label)}` : ''}`;
+                    break;
+                case 'phone':
+                    const phoneNumber = document.getElementById('phone-number').value;
+                    if (phoneNumber) data = `tel:${phoneNumber}`;
+                    break;
+                case 'whatsapp':
+                    const whatsappNumber = document.getElementById('whatsapp-number').value;
+                    const whatsappMessage = document.getElementById('whatsapp-message').value;
+                    if (whatsappNumber) data = `https://wa.me/${whatsappNumber.replace('+', '')}${whatsappMessage ? `?text=${encodeURIComponent(whatsappMessage)}` : ''}`;
+                    break;
+                case 'social':
+                    const platform = document.getElementById('social-platform').value;
+                    const username = document.getElementById('social-username').value;
+                    if (username) {
+                        if (platform === 'instagram') data = `https://instagram.com/${username}`;
+                        else if (platform === 'telegram') data = `https://t.me/${username}`;
+                        else if (platform === 'tiktok') data = `https://tiktok.com/@${username}`;
+                    }
+                    break;
+                case 'appstore':
+                    const appPlatform = document.getElementById('appstore-platform').value;
+                    const appId = document.getElementById('appstore-id').value;
+                    if (appId) {
+                        if (appPlatform === 'playstore') data = appId.startsWith('http') ? appId : `https://play.google.com/store/apps/details?id=${appId}`;
+                        else if (appPlatform === 'appstore') data = appId.startsWith('http') ? appId : `https://apps.apple.com/app/id${appId}`;
+                    }
+                    break;
+                case 'multilang':
+                    const baseUrl = document.getElementById('multilang-baseurl').value;
+                    const langParam = document.getElementById('multilang-langparam').value;
+                    if (baseUrl && langParam) data = `${baseUrl}?${langParam}`;
+                    break;
+                case 'htmlcustom':
+                    const htmlContent = document.getElementById('htmlcustom-content').value;
+                    if (htmlContent) data = `data:text/html;base64,${btoa(htmlContent)}`;
+                    break;
+            }
+
+            const dotColor = document.getElementById('dot-color').value;
+            const bgColor = document.getElementById('bg-color').value;
+            const dotStyle = document.getElementById('dot-style').value;
+            const qrContainer = document.getElementById('qr-code-container');
+            qrContainer.style.backgroundColor = bgColor;
+
+            qrCode.update({
+                data: data || " ",
+                image: logoImage,
+                dotsOptions: { color: dotColor, type: dotStyle },
+                backgroundOptions: { color: "transparent" }
+            });
+
+            // Remove preview watermark if exists
+            removePreviewWatermark();
+        }
+
+        function addPreviewWatermark() {
+            removePreviewWatermark(); // Remove existing watermark first
+            
+            const qrContainer = document.getElementById('qr-code-container');
+            const watermark = document.createElement('div');
+            watermark.id = 'preview-watermark';
+            watermark.textContent = 'PREVIEW MODE';
+            watermark.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-45deg);
+                background: rgba(255, 215, 0, 0.1);
+                color: rgba(255, 215, 0, 0.6);
+                padding: 5px 10px;
+                font-size: 12px;
+                font-weight: bold;
+                border: 1px solid rgba(255, 215, 0, 0.3);
+                border-radius: 4px;
+                pointer-events: none;
+                z-index: 5;
+            `;
+            
+            qrContainer.style.position = 'relative';
+            qrContainer.appendChild(watermark);
+        }
+
+        function removePreviewWatermark() {
+            const watermark = document.getElementById('preview-watermark');
+            if (watermark) {
+                watermark.remove();
+            }
         }
 
         // Initialize Firebase auth listeners
@@ -829,15 +968,9 @@
             requireAuth(() => qrCode.download({ name: "vinnesia-qr", extension: "svg" }));
         });
 
-        // Click handlers for disabled overlays
-        document.getElementById('controls-section').addEventListener('click', (e) => {
-            if (!isUserLoggedIn && e.target.classList.contains('disabled-overlay')) {
-                showLoginModal();
-            }
-        });
-
-        document.getElementById('output-section').addEventListener('click', (e) => {
-            if (!isUserLoggedIn && e.target.classList.contains('disabled-overlay')) {
+        // Click handlers for login required overlays
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('login-overlay')) {
                 showLoginModal();
             }
         });
@@ -852,12 +985,35 @@
         // Initial setup
         document.querySelector('.tab-button').click();
         
-        // Generate initial QR code only if user is logged in
+        // Always generate initial QR code (preview mode if not logged in)
         setTimeout(() => {
             if (isUserLoggedIn) {
-                generateQrCode();
+                generateQR();
+            } else {
+                generatePreviewQR();
             }
         }, 100);
+
+        // Add input listeners for real-time preview updates (only when not logged in)
+        function setupPreviewListeners() {
+            const inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    if (!isUserLoggedIn) {
+                        // Debounce the preview updates
+                        clearTimeout(window.previewTimeout);
+                        window.previewTimeout = setTimeout(() => {
+                            generatePreviewQR();
+                        }, 500);
+                    }
+                });
+            });
+        }
+
+        // Setup preview listeners after DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            setupPreviewListeners();
+        });
 </script>
 
 </body>
