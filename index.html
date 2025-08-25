@@ -543,1394 +543,478 @@
     <script type="module" src="firebase-config.js"></script>
 
     <script>
-class QRGenerator {
-    constructor() {
-        this.currentTab = 'text';
-        this.logoImage = null;
-        this.fileDataUrl = null;
-        this.isUserLoggedIn = false;
-        this.qrCode = null;
-        this.previewTimeout = null;
-        this.isInitialized = false;
-        
-        // Bind methods
-        this.init = this.init.bind(this);
-        this.generateQR = this.generateQR.bind(this);
-        this.generatePreviewQR = this.generatePreviewQR.bind(this);
-        this.openTab = this.openTab.bind(this);
-        this.requireAuth = this.requireAuth.bind(this);
-    }
+        let currentTab = 'text';
+        let logoImage = null;
+        let fileDataUrl = null;
+        let isUserLoggedIn = false;
 
-    async init() {
-        try {
-            await this.waitForQRLibrary();
-            this.initializeQRCode();
-            this.setupEventListeners();
-            this.checkAuthState();
-            this.setupUI();
-            this.isInitialized = true;
-            console.log('QR Generator initialized successfully');
-        } catch (error) {
-            console.error('Failed to initialize QR Generator:', error);
-            this.showErrorMessage('Failed to load QR Generator. Please refresh the page.');
-        }
-    }
-
-    waitForQRLibrary() {
-        return new Promise((resolve, reject) => {
-            let attempts = 0;
-            const maxAttempts = 50; // 5 seconds timeout
-            
-            const checkLibrary = () => {
-                if (window.QRCodeStyling) {
-                    resolve();
-                } else if (attempts < maxAttempts) {
-                    attempts++;
-                    setTimeout(checkLibrary, 100);
-                } else {
-                    reject(new Error('QR Code library failed to load'));
-                }
-            };
-            
-            checkLibrary();
-        });
-    }
-
-    initializeQRCode() {
-        this.qrCode = new QRCodeStyling({
+        const qrCode = new QRCodeStyling({
             width: 300,
             height: 300,
             data: "Welcome to VIN NESIA QR Generator!",
             image: "",
-            dotsOptions: { 
-                color: "#000000", 
-                type: "square" 
-            },
-            backgroundOptions: { 
-                color: "#ffffff" 
-            },
-            imageOptions: { 
-                crossOrigin: "anonymous", 
-                margin: 5, 
-                imageSize: 0.4 
-            },
-            qrOptions: { 
-                errorCorrectionLevel: 'H' 
-            }
+            dotsOptions: { color: "#000000", type: "square" },
+            backgroundOptions: { color: "#ffffff" },
+            imageOptions: { crossOrigin: "anonymous", margin: 5, imageSize: 0.4 },
+            qrOptions: { errorCorrectionLevel: 'H' }
         });
 
-        const qrContainer = document.getElementById("qr-code");
-        if (qrContainer) {
-            qrCode.append(qrContainer);
-        }
-    }
+        qrCode.append(document.getElementById("qr-code"));
 
-    setupEventListeners() {
-        // Tab buttons
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const tabName = this.getTabNameFromButton(e.target);
-                if (tabName) {
-                    this.openTab(e, tabName);
-                }
-            });
-        });
-
-        // Generate button
-        const generateBtn = document.getElementById('generate-btn');
-        if (generateBtn) {
-            generateBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.generateQrCode();
-            });
+        // Authentication functions
+        function showLoginModal() {
+            document.getElementById('login-modal').classList.add('show');
         }
 
-        // Download buttons
-        const downloadPNG = document.getElementById('download-png');
-        const downloadSVG = document.getElementById('download-svg');
-        
-        if (downloadPNG) {
-            downloadPNG.addEventListener('click', () => {
-                this.requireAuth(() => this.downloadQR('png'));
-            });
-        }
-        
-        if (downloadSVG) {
-            downloadSVG.addEventListener('click', () => {
-                this.requireAuth(() => this.downloadQR('svg'));
-            });
+        function hideLoginModal() {
+            document.getElementById('login-modal').classList.remove('show');
         }
 
-        // File upload listeners
-        const logoUpload = document.getElementById('logo-upload');
-        const fileInput = document.getElementById('file-input');
-        
-        if (logoUpload) {
-            logoUpload.addEventListener('change', (e) => this.handleLogoUpload(e));
-        }
-        
-        if (fileInput) {
-            fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
-        }
-
-        // Modal listeners
-        this.setupModalListeners();
-        
-        // Input listeners for real-time preview
-        this.setupPreviewListeners();
-        
-        // Auth button listeners
-        this.setupAuthListeners();
-    }
-
-    getTabNameFromButton(button) {
-        const text = button.textContent.toLowerCase();
-        if (text.includes('text') || text.includes('url')) return 'text';
-        if (text.includes('wifi')) return 'wifi';
-        if (text.includes('vcard')) return 'vcard';
-        if (text.includes('email')) return 'email';
-        if (text.includes('sms')) return 'sms';
-        if (text.includes('location')) return 'geo';
-        if (text.includes('file')) return 'file';
-        if (text.includes('event')) return 'event';
-        if (text.includes('crypto')) return 'crypto';
-        if (text.includes('phone')) return 'phone';
-        if (text.includes('whatsapp')) return 'whatsapp';
-        if (text.includes('social')) return 'social';
-        if (text.includes('app store')) return 'appstore';
-        if (text.includes('multi-lang')) return 'multilang';
-        if (text.includes('html')) return 'htmlcustom';
-        return null;
-    }
-
-    setupModalListeners() {
-        const modal = document.getElementById('login-modal');
-        const modalLogin = document.getElementById('modal-login-btn');
-        const modalRegister = document.getElementById('modal-register-btn');
-
-        if (modalLogin) {
-            modalLogin.addEventListener('click', () => {
-                const returnUrl = encodeURIComponent(window.location.href);
-                window.location.href = `login.html?returnUrl=${returnUrl}`;
-            });
-        }
-
-        if (modalRegister) {
-            modalRegister.addEventListener('click', () => {
-                const returnUrl = encodeURIComponent(window.location.href);
-                window.location.href = `login.html?returnUrl=${returnUrl}`;
-            });
-        }
-
-        if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    this.hideLoginModal();
-                }
-            });
-        }
-
-        // Handle overlay clicks
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('login-overlay')) {
-                this.showLoginModal();
-            }
-        });
-    }
-
-    setupPreviewListeners() {
-        const inputs = document.querySelectorAll('input, textarea, select');
-        inputs.forEach(input => {
-            // Skip file inputs and buttons
-            if (input.type === 'file' || input.type === 'button') return;
+        function updateUIForAuthState(loggedIn) {
+            isUserLoggedIn = loggedIn;
             
-            ['input', 'change', 'keyup'].forEach(event => {
-                input.addEventListener(event, () => {
-                    if (!this.isUserLoggedIn) {
-                        this.debouncePreviewUpdate();
-                    }
-                });
-            });
-        });
-    }
-
-    setupAuthListeners() {
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', async () => {
-                await this.logout();
-            });
-        }
-    }
-
-    debouncePreviewUpdate() {
-        if (this.previewTimeout) {
-            clearTimeout(this.previewTimeout);
-        }
-        
-        this.previewTimeout = setTimeout(() => {
-            this.generatePreviewQR();
-        }, 300); // Reduced debounce time for better UX
-    }
-
-    checkAuthState() {
-        // Check localStorage first
-        const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
-        this.updateUIForAuthState(isLoggedIn);
-
-        // Set up Firebase auth listener if available
-        this.setupFirebaseListener();
-    }
-
-    setupFirebaseListener() {
-        if (typeof window !== 'undefined') {
-            window.addEventListener('authStateChanged', (event) => {
-                this.updateUIForAuthState(event.detail.loggedIn);
-            });
-        }
-    }
-
-    updateUIForAuthState(loggedIn) {
-        this.isUserLoggedIn = loggedIn;
-        
-        if (loggedIn) {
-            this.handleLoggedInState();
-        } else {
-            this.handleLoggedOutState();
-        }
-    }
-
-    handleLoggedInState() {
-        const userEmail = localStorage.getItem('userEmail');
-        const userInfo = document.getElementById('user-info');
-        const userEmailEl = document.getElementById('user-email');
-        
-        if (userEmailEl && userEmail) {
-            userEmailEl.textContent = userEmail;
-        }
-        
-        if (userInfo) {
-            userInfo.style.display = 'flex';
-        }
-
-        this.removeLoginRequiredOverlays();
-        this.enableAllControls();
-        this.hideLoginModal();
-        
-        // Generate actual QR if we have data
-        setTimeout(() => {
-            this.generateQR();
-        }, 100);
-    }
-
-    handleLoggedOutState() {
-        const userInfo = document.getElementById('user-info');
-        if (userInfo) {
-            userInfo.style.display = 'none';
-        }
-
-        this.addLoginRequiredOverlays();
-        this.enablePreviewMode();
-        
-        // Generate preview QR
-        setTimeout(() => {
-            this.generatePreviewQR();
-        }, 100);
-    }
-
-    enableAllControls() {
-        document.querySelectorAll('button').forEach(btn => {
-            btn.disabled = false;
-        });
-        
-        document.querySelectorAll('input, textarea, select').forEach(input => {
-            input.disabled = false;
-        });
-    }
-
-    enablePreviewMode() {
-        // Enable all inputs for preview
-        document.querySelectorAll('input, textarea, select').forEach(input => {
-            input.disabled = false;
-        });
-        
-        // Enable tab buttons
-        document.querySelectorAll('.tab-button').forEach(btn => {
-            btn.disabled = false;
-        });
-        
-        // Disable action buttons
-        const actionButtons = ['generate-btn', 'download-png', 'download-svg'];
-        actionButtons.forEach(btnId => {
-            const btn = document.getElementById(btnId);
-            if (btn) btn.disabled = true;
-        });
-    }
-
-    addLoginRequiredOverlays() {
-        this.removeLoginRequiredOverlays(); // Clean first
-        
-        const generateBtn = document.getElementById('generate-btn');
-        const downloadArea = document.querySelector('.download-buttons');
-        
-        if (generateBtn) {
-            const overlay = this.createLoginOverlay('🔒 Login to Generate QR Code');
-            const parent = generateBtn.parentElement;
-            parent.style.position = 'relative';
-            parent.appendChild(overlay);
-        }
-        
-        if (downloadArea) {
-            const overlay = this.createLoginOverlay('🔒 Login to Download');
-            downloadArea.style.position = 'relative';
-            downloadArea.appendChild(overlay);
-        }
-    }
-
-    removeLoginRequiredOverlays() {
-        document.querySelectorAll('.login-overlay').forEach(overlay => {
-            overlay.remove();
-        });
-    }
-
-    createLoginOverlay(text) {
-        const overlay = document.createElement('div');
-        overlay.className = 'login-overlay';
-        overlay.textContent = text;
-        
-        const styles = {
-            position: 'absolute',
-            top: '0',
-            left: '0',
-            right: '0',
-            bottom: '0',
-            background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(138,43,226,0.4) 50%, rgba(0,0,0,0.9) 100%)',
-            color: '#FFD700',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 'bold',
-            fontSize: '1.1em',
-            borderRadius: '8px',
-            zIndex: '10',
-            cursor: 'pointer',
-            backdropFilter: 'blur(2px)',
-            transition: 'all 0.3s ease'
-        };
-        
-        Object.assign(overlay.style, styles);
-        
-        overlay.addEventListener('click', () => this.showLoginModal());
-        
-        overlay.addEventListener('mouseover', () => {
-            overlay.style.background = 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(138,43,226,0.5) 50%, rgba(0,0,0,0.95) 100%)';
-            overlay.style.fontSize = '1.2em';
-        });
-        
-        overlay.addEventListener('mouseout', () => {
-            overlay.style.background = 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(138,43,226,0.4) 50%, rgba(0,0,0,0.9) 100%)';
-            overlay.style.fontSize = '1.1em';
-        });
-        
-        return overlay;
-    }
-
-    showLoginModal() {
-        const modal = document.getElementById('login-modal');
-        if (modal) {
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-    }
-
-    hideLoginModal() {
-        const modal = document.getElementById('login-modal');
-        if (modal) {
-            modal.classList.remove('show');
-            document.body.style.overflow = 'auto';
-        }
-    }
-
-    requireAuth(callback) {
-        if (!this.isUserLoggedIn) {
-            this.showLoginModal();
-            return false;
-        }
-        callback();
-        return true;
-    }
-
-    openTab(evt, tabName) {
-        this.currentTab = tabName;
-        
-        // Update tab buttons
-        document.querySelectorAll('.tab-button').forEach(tb => {
-            tb.classList.remove('active');
-        });
-        evt.currentTarget.classList.add('active');
-        
-        // Update tab content
-        document.querySelectorAll('.tab-content').forEach(tc => {
-            tc.classList.remove('active');
-        });
-        
-        const targetTab = document.getElementById(tabName);
-        if (targetTab) {
-            targetTab.classList.add('active');
-        }
-        
-        // Generate appropriate QR
-        setTimeout(() => {
-            if (this.isUserLoggedIn) {
-                this.generateQR();
+            if (loggedIn) {
+                // User is logged in
+                const userEmail = localStorage.getItem('userEmail');
+                document.getElementById('user-email').textContent = userEmail || 'User';
+                document.getElementById('user-info').style.display = 'flex';
+                
+                // Remove disabled overlays and enable all functionality
+                removeLoginRequiredOverlays();
+                enableAllControls();
+                
+                hideLoginModal();
             } else {
-                this.generatePreviewQR();
+                // User is not logged in - show everything but add login required overlays on action buttons
+                document.getElementById('user-info').style.display = 'none';
+                
+                // Keep inputs enabled for preview, but add overlays to action buttons
+                addLoginRequiredOverlays();
+                enablePreviewMode();
             }
-        }, 50);
-    }
+        }
 
-    generateQrCode() {
-        this.requireAuth(() => {
-            this.generateQR();
-        });
-    }
-
-    generateQR() {
-        if (!this.qrCode) return;
-        
-        try {
-            const data = this.getQRData();
-            const options = this.getQROptions();
-            
-            this.qrCode.update({
-                data: data || "https://qr.vinnesia.my.id",
-                ...options
+        function enableAllControls() {
+            // Enable all buttons and inputs
+            document.querySelectorAll('button').forEach(btn => {
+                btn.disabled = false;
             });
             
-            this.removePreviewWatermark();
-            this.updateQRContainer(options.backgroundOptions.color);
-            
-        } catch (error) {
-            console.error('Error generating QR code:', error);
-            this.showErrorMessage('Error generating QR code. Please check your input.');
+            document.querySelectorAll('input, textarea, select').forEach(input => {
+                input.disabled = false;
+            });
         }
-    }
 
-    generatePreviewQR() {
-        if (!this.qrCode) return;
-        
-        try {
-            const previewData = this.getPreviewData();
+        function enablePreviewMode() {
+            // Enable all inputs and selects so users can see and interact with forms
+            document.querySelectorAll('input, textarea, select').forEach(input => {
+                input.disabled = false;
+            });
             
-            this.qrCode.update({
+            // Enable tab buttons for navigation
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.disabled = false;
+            });
+            
+            // Only disable action buttons (generate, download)
+            const actionButtons = ['generate-btn', 'download-png', 'download-svg'];
+            actionButtons.forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                if (btn) btn.disabled = true;
+            });
+        }
+
+        function addLoginRequiredOverlays() {
+            // Add overlay only to action buttons area, not the whole sections
+            const generateBtn = document.getElementById('generate-btn');
+            const downloadArea = document.querySelector('.download-buttons');
+            
+            if (generateBtn && !generateBtn.parentElement.querySelector('.login-overlay')) {
+                const overlay = createLoginOverlay('🔒 Login to Generate QR Code');
+                generateBtn.style.position = 'relative';
+                generateBtn.parentElement.style.position = 'relative';
+                generateBtn.parentElement.appendChild(overlay);
+            }
+            
+            if (downloadArea && !downloadArea.querySelector('.login-overlay')) {
+                const overlay = createLoginOverlay('🔒 Login to Download');
+                downloadArea.style.position = 'relative';
+                downloadArea.appendChild(overlay);
+            }
+        }
+
+        function removeLoginRequiredOverlays() {
+            document.querySelectorAll('.login-overlay').forEach(overlay => {
+                overlay.remove();
+            });
+        }
+
+        function createLoginOverlay(text) {
+            const overlay = document.createElement('div');
+            overlay.className = 'login-overlay';
+            overlay.textContent = text;
+            overlay.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(138,43,226,0.3) 50%, rgba(0,0,0,0.9) 100%);
+                color: #FFD700;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 1.1em;
+                border-radius: 8px;
+                z-index: 10;
+                cursor: pointer;
+                backdrop-filter: blur(2px);
+                transition: all 0.3s ease;
+            `;
+            
+            overlay.addEventListener('click', showLoginModal);
+            overlay.addEventListener('mouseover', () => {
+                overlay.style.background = 'linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(138,43,226,0.4) 50%, rgba(0,0,0,0.95) 100%)';
+                overlay.style.fontSize = '1.2em';
+            });
+            overlay.addEventListener('mouseout', () => {
+                overlay.style.background = 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(138,43,226,0.3) 50%, rgba(0,0,0,0.9) 100%)';
+                overlay.style.fontSize = '1.1em';
+            });
+            
+            return overlay;
+        }
+
+        // Check if user needs to login before performing actions
+        function requireAuth(callback) {
+            if (!isUserLoggedIn) {
+                showLoginModal();
+                return false;
+            }
+            callback();
+            return true;
+        }
+
+        function openTab(evt, tabName) {
+            // Allow tab switching even without login for preview
+            currentTab = tabName;
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(tb => tb.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+            
+            // Generate preview QR if not logged in
+            if (!isUserLoggedIn) {
+                generatePreviewQR();
+            }
+        }
+
+        function generateQrCode() {
+            if (!requireAuth(() => {
+                generateQR();
+            })) return;
+        }
+
+        function generatePreviewQR() {
+            // Generate a preview QR with sample data for demonstration
+            let previewData = "";
+            switch (currentTab) {
+                case 'text': previewData = "https://qr.vinnesia.my.id - Login to customize!"; break;
+                case 'wifi': previewData = "WIFI:T:WPA;S:SampleNetwork;P:SamplePassword;;"; break;
+                case 'vcard': previewData = "BEGIN:VCARD\nVERSION:3.0\nFN:Sample Name\nTEL:+123456789\nEMAIL:sample@example.com\nORG:VIN NESIA\nEND:VCARD"; break;
+                case 'email': previewData = "mailto:sample@example.com?subject=Sample Subject&body=Sample message"; break;
+                case 'sms': previewData = "SMSTO:+123456789:Sample SMS message"; break;
+                case 'geo': previewData = "geo:-6.2088,106.8456"; break;
+                case 'phone': previewData = "tel:+6281234567890"; break;
+                case 'whatsapp': previewData = "https://wa.me/6281234567890?text=Hello!"; break;
+                case 'crypto': previewData = "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.001"; break;
+                default: previewData = `${currentTab.toUpperCase()} - Login to create custom QR codes!`;
+            }
+
+            // Update QR code with preview data and add watermark effect
+            qrCode.update({
                 data: previewData,
-                image: null,
+                image: null, // No logo in preview
                 dotsOptions: { 
-                    color: "#666666", 
+                    color: "#666666", // Dimmed color for preview
                     type: "square" 
                 },
-                backgroundOptions: { 
-                    color: "transparent" 
-                }
+                backgroundOptions: { color: "transparent" }
             });
-            
+
+            // Add preview watermark
             setTimeout(() => {
-                this.addPreviewWatermark();
+                addPreviewWatermark();
             }, 100);
-            
-        } catch (error) {
-            console.error('Error generating preview QR:', error);
         }
-    }
 
-    getQRData() {
-        const getValue = (id) => {
-            const el = document.getElementById(id);
-            return el ? el.value.trim() : '';
-        };
-
-        switch (this.currentTab) {
-            case 'text':
-                return getValue('text-input') || "https://qr.vinnesia.my.id";
-                
-            case 'wifi':
-                const ssid = getValue('wifi-ssid');
-                const password = getValue('wifi-password');
-                const encryption = getValue('wifi-encryption');
-                return ssid ? `WIFI:T:${encryption};S:${ssid};P:${password};;` : '';
-                
-            case 'vcard':
-                const name = getValue('vcard-name');
-                const phone = getValue('vcard-phone');
-                const email = getValue('vcard-email');
-                const org = getValue('vcard-org');
-                const url = getValue('vcard-url');
-                return name ? `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nTEL:${phone}\nEMAIL:${email}\nORG:${org}\nURL:${url}\nEND:VCARD` : '';
-                
-            case 'email':
-                const to = getValue('email-to');
-                const subject = getValue('email-subject');
-                const body = getValue('email-body');
-                return to ? `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}` : '';
-                
-            case 'sms':
-                const smsTo = getValue('sms-to');
-                const smsBody = getValue('sms-body');
-                return smsTo ? `SMSTO:${smsTo}:${encodeURIComponent(smsBody)}` : '';
-                
-            case 'geo':
-                const lat = getValue('geo-lat');
-                const lon = getValue('geo-lon');
-                return (lat && lon) ? `geo:${lat},${lon}` : '';
-                
-            case 'file':
-                return this.fileDataUrl || '';
-                
-            case 'event':
-                return this.getEventData();
-                
-            case 'crypto':
-                return this.getCryptoData();
-                
-            case 'phone':
-                const phoneNumber = getValue('phone-number');
-                return phoneNumber ? `tel:${phoneNumber}` : '';
-                
-            case 'whatsapp':
-                const whatsappNumber = getValue('whatsapp-number');
-                const whatsappMessage = getValue('whatsapp-message');
-                return whatsappNumber ? `https://wa.me/${whatsappNumber.replace('+', '')}${whatsappMessage ? `?text=${encodeURIComponent(whatsappMessage)}` : ''}` : '';
-                
-            case 'social':
-                return this.getSocialData();
-                
-            case 'appstore':
-                return this.getAppStoreData();
-                
-            case 'multilang':
-                const baseUrl = getValue('multilang-baseurl');
-                const langParam = getValue('multilang-langparam');
-                return (baseUrl && langParam) ? `${baseUrl}?${langParam}` : '';
-                
-            case 'htmlcustom':
-                const htmlContent = getValue('htmlcustom-content');
-                return htmlContent ? `data:text/html;base64,${btoa(htmlContent)}` : '';
-                
-            default:
-                return "https://qr.vinnesia.my.id";
-        }
-    }
-
-    getEventData() {
-        const getValue = (id) => {
-            const el = document.getElementById(id);
-            return el ? el.value.trim() : '';
-        };
-
-        const summary = getValue('event-summary');
-        const start = getValue('event-start').replace(/[-:]/g, '');
-        const end = getValue('event-end').replace(/[-:]/g, '');
-        const location = getValue('event-location');
-        const description = getValue('event-description');
-        
-        if (summary && start && end) {
-            return `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:${summary}\nDTSTART:${start}\nDTEND:${end}\nLOCATION:${location}\nDESCRIPTION:${description}\nEND:VEVENT\nEND:VCALENDAR`;
-        }
-        return '';
-    }
-
-    getCryptoData() {
-        const getValue = (id) => {
-            const el = document.getElementById(id);
-            return el ? el.value.trim() : '';
-        };
-
-        const cryptoType = getValue('crypto-type');
-        const address = getValue('crypto-address');
-        const amount = getValue('crypto-amount');
-        const label = getValue('crypto-label');
-        
-        if (address) {
-            let url = `${cryptoType}:${address}`;
-            const params = [];
-            if (amount) params.push(`amount=${amount}`);
-            if (label) params.push(`label=${encodeURIComponent(label)}`);
-            if (params.length > 0) url += `?${params.join('&')}`;
-            return url;
-        }
-        return '';
-    }
-
-    getSocialData() {
-        const getValue = (id) => {
-            const el = document.getElementById(id);
-            return el ? el.value.trim() : '';
-        };
-
-        const platform = getValue('social-platform');
-        const username = getValue('social-username');
-        
-        if (username) {
-            const platformUrls = {
-                'instagram': `https://instagram.com/${username}`,
-                'telegram': `https://t.me/${username}`,
-                'tiktok': `https://tiktok.com/@${username}`
-            };
-            return platformUrls[platform] || '';
-        }
-        return '';
-    }
-
-    getAppStoreData() {
-        const getValue = (id) => {
-            const el = document.getElementById(id);
-            return el ? el.value.trim() : '';
-        };
-
-        const appPlatform = getValue('appstore-platform');
-        const appId = getValue('appstore-id');
-        
-        if (appId) {
-            if (appId.startsWith('http')) return appId;
-            
-            if (appPlatform === 'playstore') {
-                return `https://play.google.com/store/apps/details?id=${appId}`;
-            } else if (appPlatform === 'appstore') {
-                return `https://apps.apple.com/app/id${appId}`;
-            }
-        }
-        return '';
-    }
-
-    getPreviewData() {
-        const previews = {
-            'text': "https://qr.vinnesia.my.id - Login to customize!",
-            'wifi': "WIFI:T:WPA;S:SampleNetwork;P:••••••••;;",
-            'vcard': "BEGIN:VCARD\nVERSION:3.0\nFN:Sample User\nTEL:+123456789\nEMAIL:user@example.com\nORG:VIN NESIA\nEND:VCARD",
-            'email': "mailto:sample@example.com?subject=Sample Subject&body=Sample message",
-            'sms': "SMSTO:+123456789:Sample SMS message",
-            'geo': "geo:-6.2088,106.8456",
-            'phone': "tel:+6281234567890",
-            'whatsapp': "https://wa.me/6281234567890?text=Hello!",
-            'crypto': "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa?amount=0.001",
-            'social': "https://instagram.com/sample_user",
-            'appstore': "https://play.google.com/store/apps/details?id=com.sample.app",
-            'event': "BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:Sample Event\nDTSTART:20241225T120000\nDTEND:20241225T140000\nEND:VEVENT\nEND:VCALENDAR",
-            'multilang': "https://example.com?lang=en",
-            'htmlcustom': "data:text/html;base64,PGgxPkhlbGxvIFdvcmxkITwvaDE+",
-            'file': "data:text/plain;base64,U2FtcGxlIEZpbGU="
-        };
-        
-        return previews[this.currentTab] || `${this.currentTab.toUpperCase()} - Login to create custom QR codes!`;
-    }
-
-    getQROptions() {
-        const getValue = (id) => {
-            const el = document.getElementById(id);
-            return el ? el.value : '';
-        };
-
-        return {
-            image: this.logoImage,
-            dotsOptions: { 
-                color: getValue('dot-color') || "#000000", 
-                type: getValue('dot-style') || "square" 
-            },
-            backgroundOptions: { 
-                color: "transparent" 
-            }
-        };
-    }
-
-    updateQRContainer(bgColor) {
-        const container = document.getElementById('qr-code-container');
-        if (container) {
-            container.style.backgroundColor = bgColor || '#ffffff';
-        }
-    }
-
-    addPreviewWatermark() {
-        this.removePreviewWatermark();
-        
-        const qrContainer = document.getElementById('qr-code-container');
-        if (!qrContainer) return;
-        
-        const watermark = document.createElement('div');
-        watermark.id = 'preview-watermark';
-        watermark.textContent = 'PREVIEW';
-        
-        const styles = {
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%) rotate(-45deg)',
-            background: 'rgba(255, 215, 0, 0.15)',
-            color: 'rgba(255, 215, 0, 0.8)',
-            padding: '8px 16px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            border: '2px solid rgba(255, 215, 0, 0.4)',
-            borderRadius: '6px',
-            pointerEvents: 'none',
-            zIndex: '5',
-            letterSpacing: '2px'
-        };
-        
-        Object.assign(watermark.style, styles);
-        
-        qrContainer.style.position = 'relative';
-        qrContainer.appendChild(watermark);
-    }
-
-    removePreviewWatermark() {
-        const watermark = document.getElementById('preview-watermark');
-        if (watermark) {
-            watermark.remove();
-        }
-    }
-
-    handleLogoUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        if (!file.type.startsWith('image/')) {
-            this.showErrorMessage('Please select a valid image file.');
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            this.logoImage = e.target.result;
-            if (this.isUserLoggedIn) {
-                this.generateQR();
-            }
-        };
-        reader.onerror = () => {
-            this.showErrorMessage('Failed to read logo file.');
-        };
-        reader.readAsDataURL(file);
-    }
-
-    handleFileUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        if (file.size > 2048) { // 2KB limit
-            this.showErrorMessage('File too large. Please select a file smaller than 2KB.');
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            this.fileDataUrl = e.target.result;
-            if (this.isUserLoggedIn) {
-                this.generateQR();
-            }
-        };
-        reader.onerror = () => {
-            this.showErrorMessage('Failed to read file.');
-        };
-        reader.readAsDataURL(file);
-    }
-
-    downloadQR(format) {
-        if (!this.qrCode) return;
-        
-        try {
-            const filename = `vinnesia-qr-${Date.now()}`;
-            this.qrCode.download({ 
-                name: filename, 
-                extension: format 
-            });
-        } catch (error) {
-            console.error('Download failed:', error);
-            this.showErrorMessage('Failed to download QR code. Please try again.');
-        }
-    }
-
-    async logout() {
-        try {
-            // Try Firebase logout first
-            if (window.firebaseAuth && window.firebaseAuth.auth) {
-                await window.firebaseAuth.signOut(window.firebaseAuth.auth);
-            }
-        } catch (error) {
-            console.error('Logout error:', error);
-        } finally {
-            // Always clear local storage as fallback
-            localStorage.removeItem('userLoggedIn');
-            localStorage.removeItem('userEmail');
-            localStorage.removeItem('userId');
-            this.updateUIForAuthState(false);
-        }
-    }
-
-    setupUI() {
-        // Initialize first tab
-        const firstTabButton = document.querySelector('.tab-button');
-        if (firstTabButton) {
-            firstTabButton.click();
-        }
-        
-        // Setup loading states
-        this.hideLoadingStates();
-    }
-
-    hideLoadingStates() {
-        // Remove any loading overlays or blur effects
-        document.querySelectorAll('.loading-overlay').forEach(el => el.remove());
-        document.body.classList.remove('loading');
-        
-        // Make sure main content is visible
-        const main = document.querySelector('main');
-        if (main) {
-            main.style.opacity = '1';
-            main.style.filter = 'none';
-        }
-    }
-
-    showErrorMessage(message) {
-        // Create or update error message
-        let errorDiv = document.getElementById('error-message');
-        
-        if (!errorDiv) {
-            errorDiv = document.createElement('div');
-            errorDiv.id = 'error-message';
-            errorDiv.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #ff4444, #cc0000);
-                color: white;
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                z-index: 1000;
-                font-weight: bold;
-                max-width: 300px;
-                word-wrap: break-word;
-                animation: slideIn 0.3s ease-out;
-            `;
-            
-            // Add slide in animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes slideIn {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                @keyframes slideOut {
-                    from { transform: translateX(0); opacity: 1; }
-                    to { transform: translateX(100%); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-            document.body.appendChild(errorDiv);
-        }
-        
-        errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
-        
-        // Auto hide after 5 seconds
-        setTimeout(() => {
-            if (errorDiv) {
-                errorDiv.style.animation = 'slideOut 0.3s ease-in';
-                setTimeout(() => {
-                    if (errorDiv && errorDiv.parentNode) {
-                        errorDiv.parentNode.removeChild(errorDiv);
+        function generateQR() {
+            // This is the actual QR generation for logged-in users
+            let data = "";
+            switch (currentTab) {
+                case 'text': data = document.getElementById('text-input').value || "https://qr.vinnesia.my.id"; break;
+                case 'wifi':
+                    const ssid = document.getElementById('wifi-ssid').value;
+                    const password = document.getElementById('wifi-password').value;
+                    const encryption = document.getElementById('wifi-encryption').value;
+                    if (ssid) data = `WIFI:T:${encryption};S:${ssid};P:${password};;`;
+                    break;
+                case 'vcard':
+                    const name = document.getElementById('vcard-name').value;
+                    const phone = document.getElementById('vcard-phone').value;
+                    const email = document.getElementById('vcard-email').value;
+                    const org = document.getElementById('vcard-org').value;
+                    const url = document.getElementById('vcard-url').value;
+                    if (name) data = `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nTEL:${phone}\nEMAIL:${email}\nORG:${org}\nURL:${url}\nEND:VCARD`;
+                    break;
+                case 'email':
+                    const to = document.getElementById('email-to').value;
+                    const subject = document.getElementById('email-subject').value;
+                    const body = document.getElementById('email-body').value;
+                    if (to) data = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                    break;
+                case 'sms':
+                    const smsTo = document.getElementById('sms-to').value;
+                    const smsBody = document.getElementById('sms-body').value;
+                    if (smsTo) data = `SMSTO:${smsTo}:${encodeURIComponent(smsBody)}`;
+                    break;
+                case 'geo':
+                    const lat = document.getElementById('geo-lat').value;
+                    const lon = document.getElementById('geo-lon').value;
+                    if (lat && lon) data = `geo:${lat},${lon}`;
+                    break;
+                case 'file': data = fileDataUrl || " "; break;
+                case 'event':
+                    const summary = document.getElementById('event-summary').value;
+                    const start = document.getElementById('event-start').value.replace(/[-:]/g, '');
+                    const end = document.getElementById('event-end').value.replace(/[-:]/g, '');
+                    const location = document.getElementById('event-location').value;
+                    const description = document.getElementById('event-description').value;
+                    if (summary && start && end) {
+                        data = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:${summary}\nDTSTART:${start}\nDTEND:${end}\nLOCATION:${location}\nDESCRIPTION:${description}\nEND:VEVENT\nEND:VCALENDAR`;
                     }
-                }, 300);
-            }
-        }, 5000);
-        
-        // Click to dismiss
-        errorDiv.addEventListener('click', () => {
-            errorDiv.style.animation = 'slideOut 0.3s ease-in';
-            setTimeout(() => {
-                if (errorDiv && errorDiv.parentNode) {
-                    errorDiv.parentNode.removeChild(errorDiv);
-                }
-            }, 300);
-        });
-    }
-
-    showSuccessMessage(message) {
-        let successDiv = document.getElementById('success-message');
-        
-        if (!successDiv) {
-            successDiv = document.createElement('div');
-            successDiv.id = 'success-message';
-            successDiv.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #4CAF50, #2E7D32);
-                color: white;
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                z-index: 1000;
-                font-weight: bold;
-                max-width: 300px;
-                word-wrap: break-word;
-                animation: slideIn 0.3s ease-out;
-            `;
-            document.body.appendChild(successDiv);
-        }
-        
-        successDiv.textContent = message;
-        successDiv.style.display = 'block';
-        
-        // Auto hide after 3 seconds
-        setTimeout(() => {
-            if (successDiv) {
-                successDiv.style.animation = 'slideOut 0.3s ease-in';
-                setTimeout(() => {
-                    if (successDiv && successDiv.parentNode) {
-                        successDiv.parentNode.removeChild(successDiv);
+                    break;
+                case 'crypto':
+                    const cryptoType = document.getElementById('crypto-type').value;
+                    const address = document.getElementById('crypto-address').value;
+                    const amount = document.getElementById('crypto-amount').value;
+                    const label = document.getElementById('crypto-label').value;
+                    if (address) data = `${cryptoType}:${address}${amount ? `?amount=${amount}` : ''}${label ? `&label=${encodeURIComponent(label)}` : ''}`;
+                    break;
+                case 'phone':
+                    const phoneNumber = document.getElementById('phone-number').value;
+                    if (phoneNumber) data = `tel:${phoneNumber}`;
+                    break;
+                case 'whatsapp':
+                    const whatsappNumber = document.getElementById('whatsapp-number').value;
+                    const whatsappMessage = document.getElementById('whatsapp-message').value;
+                    if (whatsappNumber) data = `https://wa.me/${whatsappNumber.replace('+', '')}${whatsappMessage ? `?text=${encodeURIComponent(whatsappMessage)}` : ''}`;
+                    break;
+                case 'social':
+                    const platform = document.getElementById('social-platform').value;
+                    const username = document.getElementById('social-username').value;
+                    if (username) {
+                        if (platform === 'instagram') data = `https://instagram.com/${username}`;
+                        else if (platform === 'telegram') data = `https://t.me/${username}`;
+                        else if (platform === 'tiktok') data = `https://tiktok.com/@${username}`;
                     }
-                }, 300);
-            }
-        }, 3000);
-        
-        successDiv.addEventListener('click', () => {
-            successDiv.style.animation = 'slideOut 0.3s ease-in';
-            setTimeout(() => {
-                if (successDiv && successDiv.parentNode) {
-                    successDiv.parentNode.removeChild(successDiv);
-                }
-            }, 300);
-        });
-    }
-
-    // Utility method to validate inputs
-    validateInput(tabName) {
-        const validators = {
-            'text': () => {
-                const input = document.getElementById('text-input');
-                const value = input ? input.value.trim() : '';
-                if (!value) {
-                    this.showErrorMessage('Please enter some text or URL.');
-                    return false;
-                }
-                return true;
-            },
-            
-            'wifi': () => {
-                const ssid = document.getElementById('wifi-ssid');
-                if (!ssid || !ssid.value.trim()) {
-                    this.showErrorMessage('Please enter WiFi network name (SSID).');
-                    return false;
-                }
-                return true;
-            },
-            
-            'vcard': () => {
-                const name = document.getElementById('vcard-name');
-                if (!name || !name.value.trim()) {
-                    this.showErrorMessage('Please enter a name for the contact.');
-                    return false;
-                }
-                return true;
-            },
-            
-            'email': () => {
-                const email = document.getElementById('email-to');
-                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!email || !email.value.trim()) {
-                    this.showErrorMessage('Please enter recipient email address.');
-                    return false;
-                }
-                if (!emailPattern.test(email.value.trim())) {
-                    this.showErrorMessage('Please enter a valid email address.');
-                    return false;
-                }
-                return true;
-            },
-            
-            'sms': () => {
-                const phone = document.getElementById('sms-to');
-                if (!phone || !phone.value.trim()) {
-                    this.showErrorMessage('Please enter a phone number.');
-                    return false;
-                }
-                return true;
-            },
-            
-            'geo': () => {
-                const lat = document.getElementById('geo-lat');
-                const lon = document.getElementById('geo-lon');
-                if (!lat || !lon || !lat.value.trim() || !lon.value.trim()) {
-                    this.showErrorMessage('Please enter both latitude and longitude.');
-                    return false;
-                }
-                
-                const latVal = parseFloat(lat.value);
-                const lonVal = parseFloat(lon.value);
-                if (isNaN(latVal) || isNaN(lonVal) || latVal < -90 || latVal > 90 || lonVal < -180 || lonVal > 180) {
-                    this.showErrorMessage('Please enter valid coordinates (lat: -90 to 90, lon: -180 to 180).');
-                    return false;
-                }
-                return true;
-            },
-            
-            'phone': () => {
-                const phone = document.getElementById('phone-number');
-                if (!phone || !phone.value.trim()) {
-                    this.showErrorMessage('Please enter a phone number.');
-                    return false;
-                }
-                return true;
-            },
-            
-            'whatsapp': () => {
-                const phone = document.getElementById('whatsapp-number');
-                if (!phone || !phone.value.trim()) {
-                    this.showErrorMessage('Please enter a WhatsApp phone number.');
-                    return false;
-                }
-                return true;
-            },
-            
-            'crypto': () => {
-                const address = document.getElementById('crypto-address');
-                if (!address || !address.value.trim()) {
-                    this.showErrorMessage('Please enter a cryptocurrency wallet address.');
-                    return false;
-                }
-                return true;
-            }
-        };
-        
-        const validator = validators[tabName];
-        return validator ? validator() : true;
-    }
-
-    // Enhanced generateQR with validation
-    generateQR() {
-        if (!this.qrCode) {
-            this.showErrorMessage('QR Code generator not ready. Please refresh the page.');
-            return;
-        }
-        
-        // Validate input for current tab
-        if (!this.validateInput(this.currentTab)) {
-            return;
-        }
-        
-        try {
-            const data = this.getQRData();
-            if (!data || data.trim() === '') {
-                this.showErrorMessage('Please provide valid data to generate QR code.');
-                return;
-            }
-            
-            const options = this.getQROptions();
-            
-            this.qrCode.update({
-                data: data,
-                ...options
-            });
-            
-            this.removePreviewWatermark();
-            this.updateQRContainer(options.backgroundOptions.color);
-            this.showSuccessMessage('QR Code generated successfully!');
-            
-        } catch (error) {
-            console.error('Error generating QR code:', error);
-            this.showErrorMessage('Error generating QR code. Please check your input and try again.');
-        }
-    }
-
-    // Performance optimization: Lazy load heavy operations
-    async performHeavyOperation(operation) {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(operation());
-            }, 0);
-        });
-    }
-
-    // Enhanced error handling with retry mechanism
-    async retryOperation(operation, maxRetries = 3, delay = 1000) {
-        for (let i = 0; i < maxRetries; i++) {
-            try {
-                return await operation();
-            } catch (error) {
-                if (i === maxRetries - 1) throw error;
-                await new Promise(resolve => setTimeout(resolve, delay));
-                delay *= 2; // Exponential backoff
-            }
-        }
-    }
-
-    // Accessibility improvements
-    setupAccessibility() {
-        // Add ARIA labels and roles
-        const generateBtn = document.getElementById('generate-btn');
-        if (generateBtn) {
-            generateBtn.setAttribute('aria-describedby', 'generate-description');
-            generateBtn.setAttribute('role', 'button');
-            
-            // Add description
-            const description = document.createElement('div');
-            description.id = 'generate-description';
-            description.className = 'sr-only';
-            description.textContent = 'Generate QR code with the provided information';
-            generateBtn.appendChild(description);
-        }
-        
-        // Add keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.target.classList.contains('tab-button')) {
-                e.target.click();
-            }
-        });
-        
-        // Focus management for modal
-        const modal = document.getElementById('login-modal');
-        if (modal) {
-            modal.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    this.hideLoginModal();
-                }
-                
-                // Trap focus within modal
-                if (e.key === 'Tab') {
-                    const focusableElements = modal.querySelectorAll(
-                        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                    );
-                    const firstElement = focusableElements[0];
-                    const lastElement = focusableElements[focusableElements.length - 1];
-                    
-                    if (e.shiftKey) {
-                        if (document.activeElement === firstElement) {
-                            lastElement.focus();
-                            e.preventDefault();
-                        }
-                    } else {
-                        if (document.activeElement === lastElement) {
-                            firstElement.focus();
-                            e.preventDefault();
-                        }
+                    break;
+                case 'appstore':
+                    const appPlatform = document.getElementById('appstore-platform').value;
+                    const appId = document.getElementById('appstore-id').value;
+                    if (appId) {
+                        if (appPlatform === 'playstore') data = appId.startsWith('http') ? appId : `https://play.google.com/store/apps/details?id=${appId}`;
+                        else if (appPlatform === 'appstore') data = appId.startsWith('http') ? appId : `https://apps.apple.com/app/id${appId}`;
                     }
-                }
-            });
-        }
-    }
+                    break;
+                case 'multilang':
+                    const baseUrl = document.getElementById('multilang-baseurl').value;
+                    const langParam = document.getElementById('multilang-langparam').value;
+                    if (baseUrl && langParam) data = `${baseUrl}?${langParam}`;
+                    break;
+                case 'htmlcustom':
+                    const htmlContent = document.getElementById('htmlcustom-content').value;
+                    if (htmlContent) data = `data:text/html;base64,${btoa(htmlContent)}`;
+                    break;
+            }
 
-    // Progressive enhancement
-    enhanceUI() {
-        // Add loading states to buttons
-        const buttons = document.querySelectorAll('.btn');
-        buttons.forEach(button => {
-            const originalText = button.textContent;
-            
-            button.addEventListener('click', function() {
-                if (this.disabled) return;
-                
-                this.disabled = true;
-                this.textContent = 'Loading...';
-                
-                setTimeout(() => {
-                    this.disabled = false;
-                    this.textContent = originalText;
-                }, 1000);
+            const dotColor = document.getElementById('dot-color').value;
+            const bgColor = document.getElementById('bg-color').value;
+            const dotStyle = document.getElementById('dot-style').value;
+            const qrContainer = document.getElementById('qr-code-container');
+            qrContainer.style.backgroundColor = bgColor;
+
+            qrCode.update({
+                data: data || " ",
+                image: logoImage,
+                dotsOptions: { color: dotColor, type: dotStyle },
+                backgroundOptions: { color: "transparent" }
             });
-        });
-        
-        // Add smooth transitions
-        const style = document.createElement('style');
-        style.textContent = `
-            .tab-content {
-                transition: opacity 0.3s ease-in-out;
-            }
-            .tab-content:not(.active) {
-                opacity: 0;
-                pointer-events: none;
-            }
-            .tab-content.active {
-                opacity: 1;
-                pointer-events: auto;
-            }
+
+            // Remove preview watermark if exists
+            removePreviewWatermark();
+        }
+
+        function addPreviewWatermark() {
+            removePreviewWatermark(); // Remove existing watermark first
             
-            .btn {
-                transition: all 0.3s ease;
-                position: relative;
-                overflow: hidden;
-            }
-            
-            .btn::before {
-                content: '';
+            const qrContainer = document.getElementById('qr-code-container');
+            const watermark = document.createElement('div');
+            watermark.id = 'preview-watermark';
+            watermark.textContent = 'PREVIEW MODE';
+            watermark.style.cssText = `
                 position: absolute;
                 top: 50%;
                 left: 50%;
-                width: 0;
-                height: 0;
-                background: rgba(255, 255, 255, 0.3);
-                border-radius: 50%;
-                transform: translate(-50%, -50%);
-                transition: width 0.6s, height 0.6s;
-            }
-            
-            .btn:active::before {
-                width: 300px;
-                height: 300px;
-            }
-            
-            .form-group input:focus,
-            .form-group textarea:focus,
-            .form-group select:focus {
-                outline: 2px solid var(--color-secondary);
-                outline-offset: 2px;
-                box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    // Mobile optimizations
-    setupMobileOptimizations() {
-        // Touch-friendly interactions
-        if ('ontouchstart' in window) {
-            document.body.classList.add('touch-device');
-            
-            // Improve touch targets
-            const style = document.createElement('style');
-            style.textContent = `
-                .touch-device .btn {
-                    min-height: 48px;
-                    padding: 12px 20px;
-                }
-                
-                .touch-device .tab-button {
-                    min-height: 48px;
-                    padding: 12px 16px;
-                }
-                
-                .touch-device input,
-                .touch-device textarea,
-                .touch-device select {
-                    min-height: 48px;
-                    font-size: 16px; /* Prevent zoom on iOS */
-                }
+                transform: translate(-50%, -50%) rotate(-45deg);
+                background: rgba(255, 215, 0, 0.1);
+                color: rgba(255, 215, 0, 0.6);
+                padding: 5px 10px;
+                font-size: 12px;
+                font-weight: bold;
+                border: 1px solid rgba(255, 215, 0, 0.3);
+                border-radius: 4px;
+                pointer-events: none;
+                z-index: 5;
             `;
-            document.head.appendChild(style);
+            
+            qrContainer.style.position = 'relative';
+            qrContainer.appendChild(watermark);
         }
-        
-        // Handle orientation changes
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                this.adjustLayoutForOrientation();
-            }, 100);
-        });
-    }
 
-    adjustLayoutForOrientation() {
-        const main = document.querySelector('main');
-        if (!main) return;
-        
-        if (window.innerHeight < window.innerWidth && window.innerWidth < 1024) {
-            // Landscape mode on tablet/mobile
-            main.style.flexDirection = 'row';
-        } else {
-            // Portrait mode or desktop
-            main.style.flexDirection = window.innerWidth > 992 ? 'row' : 'column';
-        }
-    }
-
-    // Analytics and monitoring (privacy-friendly)
-    trackEvent(eventName, eventData = {}) {
-        // Only track if user has consented and is logged in
-        if (this.isUserLoggedIn && window.gtag) {
-            window.gtag('event', eventName, {
-                custom_parameter: eventData,
-                non_interaction: true
-            });
-        }
-    }
-
-    // Cleanup method
-    destroy() {
-        // Clear timeouts
-        if (this.previewTimeout) {
-            clearTimeout(this.previewTimeout);
-        }
-        
-        // Remove event listeners
-        document.removeEventListener('keydown', this.handleKeydown);
-        window.removeEventListener('orientationchange', this.handleOrientationChange);
-        
-        // Clear QR code
-        if (this.qrCode) {
-            const container = document.getElementById('qr-code');
-            if (container) {
-                container.innerHTML = '';
+        function removePreviewWatermark() {
+            const watermark = document.getElementById('preview-watermark');
+            if (watermark) {
+                watermark.remove();
             }
         }
-        
-        // Clear messages
-        const errorMsg = document.getElementById('error-message');
-        const successMsg = document.getElementById('success-message');
-        if (errorMsg) errorMsg.remove();
-        if (successMsg) successMsg.remove();
-    }
-}
 
-// Initialize the application
-const qrGenerator = new QRGenerator();
+        // Initialize Firebase auth listeners
+        window.addEventListener('load', () => {
+            // Check initial login state
+            const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+            updateUIForAuthState(isLoggedIn);
 
-// Wait for DOM to be ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        qrGenerator.init();
-    });
-} else {
-    qrGenerator.init();
-}
-
-// Handle page visibility changes for performance
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        // Page is hidden, pause heavy operations
-        if (qrGenerator.previewTimeout) {
-            clearTimeout(qrGenerator.previewTimeout);
-        }
-    } else {
-        // Page is visible again, resume operations
-        if (!qrGenerator.isUserLoggedIn) {
+            // Set up Firebase auth state listener
             setTimeout(() => {
-                qrGenerator.generatePreviewQR();
-            }, 100);
-        }
-    }
-});
+                if (window.firebaseAuth) {
+                    // Listen for auth state changes
+                    window.addEventListener('authStateChanged', (event) => {
+                        updateUIForAuthState(event.detail.loggedIn);
+                    });
+                }
+            }, 1000);
+        });
 
-// Handle beforeunload for cleanup
-window.addEventListener('beforeunload', () => {
-    if (qrGenerator && qrGenerator.destroy) {
-        qrGenerator.destroy();
-    }
-});
+        // Event listeners
+        document.getElementById('generate-btn').addEventListener('click', generateQrCode);
 
-// Expose qrGenerator globally for debugging (in development only)
-if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    window.qrGenerator = qrGenerator;
-}
+        // Modal buttons
+        document.getElementById('modal-login-btn').addEventListener('click', () => {
+            window.location.href = `login.html?returnUrl=${encodeURIComponent(window.location.href)}`;
+        });
 
-// Service Worker registration for offline support (optional)
-if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-                console.log('SW registered: ', registration);
-            })
-            .catch(registrationError => {
-                console.log('SW registration failed: ', registrationError);
+        document.getElementById('modal-register-btn').addEventListener('click', () => {
+            window.location.href = `login.html?returnUrl=${encodeURIComponent(window.location.href)}`;
+        });
+
+        // Logout button
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            if (window.firebaseAuth && window.firebaseAuth.auth) {
+                try {
+                    await window.firebaseAuth.signOut(window.firebaseAuth.auth);
+                    // The auth state listener will handle UI updates
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    // Fallback: clear localStorage manually
+                    localStorage.removeItem('userLoggedIn');
+                    localStorage.removeItem('userEmail');
+                    localStorage.removeItem('userId');
+                    updateUIForAuthState(false);
+                }
+            }
+        });
+
+        // File upload listeners (these work regardless of auth state for preparation)
+        document.getElementById('logo-upload').addEventListener('change', (e) => {
+            if (isUserLoggedIn) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => { logoImage = event.target.result; };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+        
+        document.getElementById('file-input').addEventListener('change', (e) => {
+            if (isUserLoggedIn) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => { fileDataUrl = event.target.result; };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+
+        // Download buttons
+        document.getElementById('download-png').addEventListener('click', () => {
+            requireAuth(() => qrCode.download({ name: "vinnesia-qr", extension: "png" }));
+        });
+        
+        document.getElementById('download-svg').addEventListener('click', () => {
+            requireAuth(() => qrCode.download({ name: "vinnesia-qr", extension: "svg" }));
+        });
+
+        // Click handlers for login required overlays
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('login-overlay')) {
+                showLoginModal();
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('login-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('login-modal')) {
+                hideLoginModal();
+            }
+        });
+
+        // Initial setup
+        document.querySelector('.tab-button').click();
+        
+        // Always generate initial QR code (preview mode if not logged in)
+        setTimeout(() => {
+            if (isUserLoggedIn) {
+                generateQR();
+            } else {
+                generatePreviewQR();
+            }
+        }, 100);
+
+        // Add input listeners for real-time preview updates (only when not logged in)
+        function setupPreviewListeners() {
+            const inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    if (!isUserLoggedIn) {
+                        // Debounce the preview updates
+                        clearTimeout(window.previewTimeout);
+                        window.previewTimeout = setTimeout(() => {
+                            generatePreviewQR();
+                        }, 500);
+                    }
+                });
             });
-    });
-}
+        }
 
+        // Setup preview listeners after DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            setupPreviewListeners();
+        });
 </script>
+
 </body>
 </html>
